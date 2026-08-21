@@ -1,6 +1,6 @@
 """
 api/users.py
-User profile management endpoints for SS SPARK.
+User profile management endpoints for PaperLens AI.
 """
 
 from __future__ import annotations

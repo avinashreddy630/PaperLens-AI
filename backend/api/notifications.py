@@ -1,6 +1,6 @@
 """
 api/notifications.py
-In-app user notification endpoints for SS SPARK.
+In-app user notification endpoints for PaperLens AI.
 """
 
 from __future__ import annotations

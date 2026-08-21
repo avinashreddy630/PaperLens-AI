@@ -110,7 +110,7 @@ class LogAction(str, Enum):
 # --------------------------------------------------------------------------- #
 
 class UserRecord(BaseModel):
-    """A registered SS SPARK user."""
+    """A registered PaperLens AI user."""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: str
     username: Optional[str] = None

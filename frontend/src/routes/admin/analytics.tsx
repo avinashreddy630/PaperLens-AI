@@ -8,16 +8,16 @@ import { adminApi } from "@/lib/admin-api";
 import type { GlobalStats } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/admin/analytics")({
-  head: () => ({ meta: [{ title: "Analytics | SS Spark Admin" }] }),
+  head: () => ({ meta: [{ title: "Analytics | PaperLens AI Admin" }] }),
   component: AdminAnalyticsPage,
 });
 
 const COLORS = [
-  "oklch(0.68 0.22 45)",
-  "oklch(0.76 0.19 60)",
-  "oklch(0.72 0.16 158)",
-  "oklch(0.82 0.15 75)",
-  "oklch(0.62 0.18 35)",
+  "#6366f1",
+  "#06b6d4",
+  "#3b82f6",
+  "#10b981",
+  "#8b5cf6",
 ];
 
 function AdminAnalyticsPage() {

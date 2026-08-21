@@ -29,7 +29,7 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)-8s | %(name)s — %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-logger = logging.getLogger("ss_spark")
+logger = logging.getLogger("paperlens_ai")
 
 
 # --------------------------------------------------------------------------- #
@@ -195,7 +195,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
-    logger.info("Shutting down SS SPARK backend.")
+    logger.info("Shutting down PaperLens AI backend.")
 
 
 # --------------------------------------------------------------------------- #
@@ -310,10 +310,12 @@ async def health():
 
 @app.get("/", tags=["Root"])
 async def root():
+    from datetime import datetime, timezone
     return {
-        "message": "SS SPARK API is running.",
-        "docs": "/docs",
-        "health": "/health",
+        "status": "healthy",
+        "app": "PaperLens AI",
+        "message": "PaperLens AI API is running.",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 

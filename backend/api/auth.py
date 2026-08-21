@@ -1,6 +1,6 @@
 """
 api/auth.py
-Authentication and user authorization API endpoints for SS SPARK.
+Authentication and user authorization API endpoints for PaperLens AI.
 """
 
 from __future__ import annotations

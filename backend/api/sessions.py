@@ -1,6 +1,6 @@
 """
 api/sessions.py
-Chat session management endpoints for SS SPARK.
+Chat session management endpoints for PaperLens AI.
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ class UpdateSessionRequest(BaseModel):
     title: Optional[str] = None
     pinned: Optional[bool] = None
     archived: Optional[bool] = None
+    favorite: Optional[bool] = None
     folder: Optional[str] = None
 
 

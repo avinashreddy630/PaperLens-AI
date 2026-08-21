@@ -5,7 +5,7 @@ import { authApi } from "@/lib/api";
 
 export const Route = createFileRoute("/verify-email")({
   validateSearch: (s) => ({ token: String((s as Record<string, unknown>).token ?? "") }),
-  head: () => ({ meta: [{ title: "Verify Email | SS Spark" }] }),
+  head: () => ({ meta: [{ title: "Verify Email | PaperLens AI" }] }),
   component: VerifyEmailPage,
 });
 

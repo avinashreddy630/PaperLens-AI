@@ -19,7 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { analyticsApi, type PanelStats } from "@/lib/api";
 
-const pieColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)"];
+const pieColors = ["#6366f1", "#06b6d4", "#8b5cf6", "#10b981"];
 
 export function AnalyzerPanel({
   open,

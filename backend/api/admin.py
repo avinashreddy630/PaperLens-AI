@@ -1,6 +1,6 @@
 """
 api/admin.py
-Administrative control panel endpoints for SS SPARK.
+Administrative control panel endpoints for PaperLens AI.
 """
 
 from __future__ import annotations

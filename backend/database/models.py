@@ -1,6 +1,6 @@
 """
 database/models.py
-PostgreSQL data persistence layer for SS SPARK (using SQLAlchemy 2.0 Async ORM).
+PostgreSQL data persistence layer for PaperLens AI (using SQLAlchemy 2.0 Async ORM).
 
 Covers:
 - UploadedDoc (uploaded documents, chunk counts, page counts, metadata)
@@ -314,6 +314,7 @@ def _sess_db_to_pydantic(item: ChatSessionDB) -> ChatSession:
         title=item.title or "New Chat",
         pinned=item.pinned or False,
         archived=item.archived or False,
+        favorite=getattr(item, "favorite", False) or False,
         folder=item.folder,
         message_count=item.message_count or 0,
         created_at=item.created_at if isinstance(item.created_at, datetime) else datetime.now(timezone.utc),
@@ -322,16 +323,21 @@ def _sess_db_to_pydantic(item: ChatSessionDB) -> ChatSession:
 
 
 async def get_sessions(user_id: str) -> List[ChatSession]:
-    """Get all chat sessions for a user."""
+    """Get all chat sessions for a user, with pinned sessions first."""
     sessionmaker = get_async_sessionmaker()
     if sessionmaker is not None:
         async with sessionmaker() as session:
-            stmt = select(ChatSessionDB).where(ChatSessionDB.user_id == user_id).order_by(ChatSessionDB.updated_at.desc())
+            stmt = (
+                select(ChatSessionDB)
+                .where(ChatSessionDB.user_id == user_id)
+                .order_by(ChatSessionDB.pinned.desc(), ChatSessionDB.updated_at.desc())
+            )
             res = await session.execute(stmt)
             items = res.scalars().all()
             return [_sess_db_to_pydantic(s) for s in items]
     else:
-        return [s for s in _mem_sessions.values() if s.user_id == user_id]
+        user_sessions = [s for s in _mem_sessions.values() if s.user_id == user_id]
+        return sorted(user_sessions, key=lambda s: (bool(s.pinned), s.updated_at), reverse=True)
 
 
 async def get_session_by_id(session_id: str, user_id: Optional[str] = None) -> Optional[ChatSession]:
@@ -363,6 +369,7 @@ async def create_session(session_obj: ChatSession) -> ChatSession:
                 title=session_obj.title,
                 pinned=session_obj.pinned,
                 archived=session_obj.archived,
+                favorite=session_obj.favorite,
                 folder=session_obj.folder,
                 message_count=session_obj.message_count,
             )

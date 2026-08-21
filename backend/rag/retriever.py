@@ -1,6 +1,6 @@
 """
 rag/retriever.py
-Hybrid Retriever combining Vector Search with BM25 Keyword Search for SS SPARK.
+Hybrid Retriever combining Vector Search with BM25 Keyword Search for PaperLens AI.
 """
 
 from __future__ import annotations

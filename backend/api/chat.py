@@ -1,6 +1,6 @@
 """
 api/chat.py
-Chat conversation and history endpoints for SS SPARK.
+Chat conversation and history endpoints for PaperLens AI.
 """
 
 from __future__ import annotations

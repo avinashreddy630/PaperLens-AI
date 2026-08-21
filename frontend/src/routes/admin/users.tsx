@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { adminApi, type AdminUser } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/admin/users")({
-  head: () => ({ meta: [{ title: "User Management | SS Spark Admin" }] }),
+  head: () => ({ meta: [{ title: "User Management | PaperLens AI Admin" }] }),
   component: AdminUsersPage,
 });
 

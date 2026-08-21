@@ -51,6 +51,7 @@ class ChatSession(BaseModel):
     title: str = "New Chat"
     pinned: bool = False
     archived: bool = False
+    favorite: bool = False
     folder: Optional[str] = None
     message_count: int = 0
     created_at: str = Field(

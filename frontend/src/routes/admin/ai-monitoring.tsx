@@ -7,7 +7,7 @@ import { adminApi } from "@/lib/admin-api";
 import type { SystemHealth } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/admin/ai-monitoring")({
-  head: () => ({ meta: [{ title: "AI Monitoring | SS Spark Admin" }] }),
+  head: () => ({ meta: [{ title: "AI Monitoring | PaperLens AI Admin" }] }),
   component: AdminAIMonitoringPage,
 });
 

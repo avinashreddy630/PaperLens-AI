@@ -308,6 +308,7 @@ export interface SessionResponse {
   title: string;
   pinned: boolean;
   archived: boolean;
+  favorite?: boolean;
   folder: string | null;
   message_count: number;
   created_at: string;

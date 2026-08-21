@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { ArrowUp, ImagePlus, Paperclip, Square } from "lucide-react";
+import { ArrowUp, ImagePlus, Paperclip, Square, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -17,10 +17,10 @@ export function ChatComposer({ value, onChange, onSend, onStop, onFiles, loading
   const imageInput = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="border-t border-border/30 bg-background/70 px-3 pb-4 pt-3 backdrop-blur-xl sm:px-5">
+    <div className="border-t border-border/80 bg-background/90 px-3 pb-3 pt-2 backdrop-blur-md sm:px-5">
       <div className="mx-auto max-w-3xl">
-        {/* Composer pill — Ultra-Premium Obsidian Glass Design */}
-        <div className="relative rounded-2xl border border-white/10 bg-[#181822]/90 dark:bg-[#16161f]/90 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.36)] transition-all duration-200 hover:border-white/15 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20">
+        {/* Floating Composer Capsule (ChatGPT Style) */}
+        <div className="relative rounded-2xl border border-border bg-card shadow-xs transition-all duration-200 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
           {/* Hidden file inputs */}
           <input
             ref={docInput}
@@ -37,7 +37,7 @@ export function ChatComposer({ value, onChange, onSend, onStop, onFiles, loading
             ref={imageInput}
             type="file"
             multiple
-            accept=".png,.jpg,.jpeg"
+            accept=".png,.jpg,.jpeg,.webp"
             className="hidden"
             onChange={(event) => {
               onFiles(Array.from(event.target.files ?? []));
@@ -45,7 +45,7 @@ export function ChatComposer({ value, onChange, onSend, onStop, onFiles, loading
             }}
           />
 
-          {/* Textarea */}
+          {/* Textarea Input */}
           <Textarea
             id="chat-input"
             value={value}
@@ -57,43 +57,44 @@ export function ChatComposer({ value, onChange, onSend, onStop, onFiles, loading
               }
             }}
             rows={1}
-            placeholder="Ask anything about your uploaded question papers..."
-            className="max-h-48 min-h-[54px] resize-none border-0 bg-transparent px-4 py-3.5 text-[0.95rem] text-foreground shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/60"
+            placeholder="Ask anything about your papers, formulas, or past exam questions..."
+            className="max-h-48 min-h-[48px] resize-none border-0 bg-transparent px-4 py-3 text-[15px] sm:text-[15.5px] leading-relaxed text-foreground shadow-none focus-visible:ring-0 placeholder:text-muted-foreground font-normal"
           />
 
-          {/* Bottom toolbar */}
-          <div className="flex items-center gap-1.5 px-3 pb-2.5">
+          {/* Bottom Toolbar */}
+          <div className="flex items-center gap-1 px-3 pb-2 pt-0.5">
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 gap-1.5 rounded-xl px-2.5 text-xs text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+              className="h-7 gap-1.5 rounded-lg px-2 text-xs font-normal text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
               onClick={() => docInput.current?.click()}
-              title="Attach document (PDF, DOCX, TXT)"
+              title="Attach question papers or notes (PDF, DOCX, TXT)"
             >
-              <Paperclip className="h-4 w-4" />
-              <span className="hidden sm:inline">Attach</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 gap-1.5 rounded-xl px-2.5 text-xs text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
-              onClick={() => imageInput.current?.click()}
-              title="Upload paper image"
-            >
-              <ImagePlus className="h-4 w-4" />
-              <span className="hidden sm:inline">Image</span>
+              <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="hidden sm:inline">Attach Papers</span>
             </Button>
 
-            {/* Send / Stop button */}
-            <div className="ml-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1.5 rounded-lg px-2 text-xs font-normal text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+              onClick={() => imageInput.current?.click()}
+              title="Upload question paper photo for instant OCR"
+            >
+              <ImagePlus className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="hidden sm:inline">OCR Image</span>
+            </Button>
+
+            {/* Send / Stop Action Button */}
+            <div className="ml-auto flex items-center gap-1.5">
               {loading ? (
                 <Button
                   size="icon"
                   aria-label="Stop generating"
                   onClick={onStop}
-                  className="h-9 w-9 shrink-0 rounded-xl bg-foreground text-background shadow-sm hover:bg-foreground/90"
+                  className="h-7.5 w-7.5 shrink-0 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
                 >
-                  <Square className="h-3.5 w-3.5 fill-current" />
+                  <Square className="h-3 w-3 fill-current" />
                 </Button>
               ) : (
                 <Button
@@ -101,18 +102,18 @@ export function ChatComposer({ value, onChange, onSend, onStop, onFiles, loading
                   aria-label="Send message"
                   disabled={!value.trim()}
                   onClick={onSend}
-                  className="h-9 w-9 shrink-0 rounded-xl gradient-brand text-brand-foreground shadow-[0_2px_12px_rgba(139,92,246,0.35)] transition-all hover:scale-105 hover:shadow-[0_4px_20px_rgba(139,92,246,0.5)] active:scale-95 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:shadow-none"
+                  className="h-7.5 w-7.5 shrink-0 rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-60 cursor-pointer"
                 >
-                  <ArrowUp className="h-4 w-4" />
+                  <ArrowUp className="h-3.5 w-3.5" />
                 </Button>
               )}
             </div>
           </div>
         </div>
 
-        {/* Footer disclaimer */}
-        <p className="mt-2 text-center text-[11px] text-muted-foreground/60">
-          SS Spark · Answers grounded only in your uploaded documents. Verify before exams.
+        {/* Branded Footer Disclaimer */}
+        <p className="mt-2 text-center text-[11px] text-muted-foreground">
+          PaperLens AI can make mistakes. Verify critical exam formulas against original syllabus papers.
         </p>
       </div>
     </div>

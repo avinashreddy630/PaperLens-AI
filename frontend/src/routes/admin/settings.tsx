@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { adminApi, type SystemSettings } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/admin/settings")({
-  head: () => ({ meta: [{ title: "System Settings | SS Spark Admin" }] }),
+  head: () => ({ meta: [{ title: "System Settings | PaperLens AI Admin" }] }),
   component: AdminSettingsPage,
 });
 

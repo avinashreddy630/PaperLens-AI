@@ -104,14 +104,87 @@ async def ask_question(
     await models.save_message(user_msg)
 
     # ------------------------------------------------------------------ #
-    # 2. Route: no documents → straight to general LLM with full chat history
+    # 2. Document count & Instant Vector Retrieval
     # ------------------------------------------------------------------ #
     docs_count = get_indexed_count(user_id=user_id)
+    retrieved_chunks = []
+    
+    if docs_count > 0:
+        try:
+            cfg = get_settings()
+            # Instant parallel vector search (typically < 20ms)
+            retrieval_res = await qdrant_retrieve(
+                question,
+                n_results=cfg.TOP_K_RESULTS or 6,
+                user_id=user_id,
+            )
+            retrieved_chunks = retrieval_res.chunks
+        except Exception as exc:
+            logger.warning("Vector retrieval encountered an exception: %s", exc)
 
-    if docs_count == 0:
+    # ------------------------------------------------------------------ #
+    # 3. Grounded Synthesis vs Fast General Chat Decision
+    # ------------------------------------------------------------------ #
+    # Check if we have strong matching chunks from uploaded materials
+    has_grounded_evidence = bool(
+        retrieved_chunks and any(c.relevance >= 0.38 for c in retrieved_chunks)
+    )
+
+    if has_grounded_evidence:
         logger.info(
-            "No documents indexed for user %s — routing question to general LLM (history turns=%d): %s",
+            "Found %d high-relevance document chunks for user %s (top score=%.3f) — generating grounded answer",
+            len(retrieved_chunks),
             user_id,
+            retrieved_chunks[0].relevance if retrieved_chunks else 0.0,
+        )
+        
+        # Build clean structured context
+        context_parts = []
+        for i, c in enumerate(retrieved_chunks, 1):
+            context_parts.append(
+                f"[Source {i}: {c.source} | Page {c.page} | Relevance: {int(c.relevance * 100)}%]\n{c.text}"
+            )
+        context_text = "\n\n".join(context_parts)
+
+        grounded_system_prompt = (
+            "You are PaperLens AI — an expert academic exam analyzer and document intelligence assistant.\n"
+            "Your task is to answer the user's question accurately and thoroughly based on the provided document excerpts.\n\n"
+            "STRICT GUIDELINES:\n"
+            "1. Base your answer directly on the provided context excerpts.\n"
+            "2. Whenever mentioning key concepts, formulas, or answers, explicitly cite the document and page number (e.g. `[DBMS_2023.pdf, Page 4]`).\n"
+            "3. If the user asks about repeating questions, exam weightage, or key topics, analyze the excerpts to highlight frequencies and patterns.\n"
+            "4. Structure your response with clean Markdown: use headers, bold highlights, bullet points, and code blocks where applicable.\n"
+            "5. If the context does not contain enough information to fully answer, state what is present in the document and supplement with clear explanation.\n\n"
+            f"=== VERIFIED DOCUMENT CONTEXT ===\n{context_text}"
+        )
+
+        pqa_result = await general_chat(
+            question=question,
+            chat_history=chat_history,
+            system_prompt=grounded_system_prompt,
+        )
+
+        # Build precise citations
+        citations: List[Dict[str, Any]] = [
+            {
+                "id": str(uuid.uuid4()),
+                "source": c.source,
+                "page": c.page,
+                "snippet": c.text[:350],
+                "relevance": round(c.relevance, 4),
+            }
+            for c in retrieved_chunks
+        ]
+        
+        # Compute dynamic confidence score based on top chunk relevance
+        top_rel = retrieved_chunks[0].relevance if retrieved_chunks else 0.8
+        pqa_result["confidence"] = round(min(0.98, max(0.65, top_rel + 0.15)), 2)
+        pqa_result["status"] = "success"
+
+    else:
+        logger.info(
+            "Routing to fast general AI (docs=%d, history turns=%d): %s",
+            docs_count,
             len(chat_history),
             question[:80],
         )
@@ -119,151 +192,16 @@ async def ask_question(
             question=question,
             chat_history=chat_history,
             system_prompt=(
-                "You are SS SPARK AI — an advanced, intelligent, and helpful conversational AI "
+                "You are PaperLens AI — an advanced, intelligent, and helpful conversational AI "
                 "assistant like ChatGPT, Claude, and Gemini.\n"
                 "- Maintain continuous context across the conversation and follow-up questions.\n"
                 "- Answer thoroughly, accurately, and naturally based on the conversation so far.\n"
                 "- Format code with syntax-highlighted Markdown code blocks.\n"
-                "- Never fabricate false citations. If unsure, say so clearly."
+                "- Structure your answers with clear formatting, step-by-step reasoning, and examples."
             ),
         )
-        citations: List[Dict[str, Any]] = []
-
-    else:
-        # -------------------------------------------------------------- #
-        # 3. Documents exist — classify relevance with conversation context
-        # -------------------------------------------------------------- #
-        doc_names = [
-            p.split("/")[-1].split("\\")[-1]   # basename only
-            for p in get_indexed_paths(user_id=user_id)
-        ]
-
-        use_rag = await is_question_relevant_to_docs(
-            question,
-            doc_names,
-            chat_history=chat_history,
-        )
-
-        if use_rag:
-            # Contextualize query for document retrieval in case it's a follow-up
-            search_query = await contextualize_query(question, chat_history=chat_history)
-            logger.info(
-                "Documents relevant for user %s — routing to RAG pipeline with query=%r: %s",
-                user_id,
-                search_query[:80],
-                question[:80],
-            )
-            # ---------------------------------------------------------- #
-            # 3a. RAG path: Direct Qdrant/ChromaDB retrieval + PaperQA
-            # ---------------------------------------------------------- #
-            retrieved_chunks = []
-            try:
-                from rag.vector_store import get_vector_store
-                cfg = get_settings()
-                vs = get_vector_store(str(cfg.CHROMA_DIR), cfg.CHROMA_COLLECTION)
-                if vs.count() > 0:
-                    retrieval_res = await qdrant_retrieve(
-                        search_query,
-                        n_results=cfg.TOP_K_RESULTS,
-                        user_id=user_id,
-                    )
-                    retrieved_chunks = retrieval_res.chunks
-            except Exception as exc:
-                logger.warning("Vector store retrieval failed (non-fatal): %s", exc)
-
-            # Try PaperQA agentic query first (scoped to user's documents)
-            pqa_result = await pqa_query(search_query, user_id=user_id)
-
-            # Map PaperQA sources → citations
-            citations = [
-                {
-                    "id": str(uuid.uuid4()),
-                    "source": s["source"],
-                    "page": s["page"],
-                    "snippet": s["snippet"],
-                    "relevance": s["relevance"],
-                }
-                for s in pqa_result.get("sources", [])
-            ]
-
-            # If PaperQA had no sources or returned unsure, use the retrieved chunks with General LLM
-            if (not citations or pqa_result.get("status") in ("unsure", "error")) and retrieved_chunks:
-                logger.info("Answering directly from %d retrieved vector chunks", len(retrieved_chunks))
-                context_text = "\n\n".join(
-                    f"--- Source: {c.source} (Page {c.page}) ---\n{c.text}"
-                    for c in retrieved_chunks
-                )
-                grounded_prompt = (
-                    "You are SS SPARK AI — an expert academic assistant.\n"
-                    "Answer the user's question accurately and thoroughly based on the provided document excerpts.\n"
-                    "If the answer is found in the context, cite the source name and page number.\n\n"
-                    f"CONTEXT FROM UPLOADED DOCUMENTS:\n{context_text}"
-                )
-                grounded_res = await general_chat(
-                    question=question,
-                    chat_history=chat_history,
-                    system_prompt=grounded_prompt,
-                )
-                if grounded_res.get("answer") and grounded_res.get("status") != "error":
-                    pqa_result = grounded_res
-                    citations = [
-                        {
-                            "id": str(uuid.uuid4()),
-                            "source": c.source,
-                            "page": c.page,
-                            "snippet": c.text[:400],
-                            "relevance": round(c.relevance, 4),
-                        }
-                        for c in retrieved_chunks
-                    ]
-            elif (not citations or pqa_result.get("status") in ("unsure", "error")) and chat_history:
-                logger.info("RAG returned unsure/no citations for follow-up — answering with conversation context")
-                general_fallback = await general_chat(
-                    question=question,
-                    chat_history=chat_history,
-                )
-                if general_fallback.get("answer") and general_fallback.get("status") != "error":
-                    pqa_result = general_fallback
-                    citations = []
-
-            # Enrich remaining citations from retrieved chunks
-            if citations and retrieved_chunks:
-                existing_keys = {(c["source"], c["page"]) for c in citations}
-                for chunk in retrieved_chunks:
-                    key = (chunk.source, chunk.page)
-                    if key not in existing_keys:
-                        citations.append(
-                            {
-                                "id": str(uuid.uuid4()),
-                                "source": chunk.source,
-                                "page": chunk.page,
-                                "snippet": chunk.text[:400],
-                                "relevance": round(chunk.relevance, 4),
-                            }
-                        )
-                        existing_keys.add(key)
-
-        else:
-            logger.info(
-                "Question not relevant to documents — using general LLM (history turns=%d): %s",
-                len(chat_history),
-                question[:80],
-            )
-            # ---------------------------------------------------------- #
-            # 3b. General-chat path — docs exist but question is unrelated
-            # ---------------------------------------------------------- #
-            pqa_result = await general_chat(
-                question=question,
-                chat_history=chat_history,
-                system_prompt=(
-                    "You are SS SPARK AI — an advanced, intelligent, conversational assistant like ChatGPT, Claude, and Gemini.\n"
-                    "- The user has uploaded documents, but this question is general knowledge, conversational follow-up, or coding help.\n"
-                    "- Answer naturally using your general knowledge and the full conversation history.\n"
-                    "- Be accurate, thorough, and format code with markdown code blocks.\n"
-                    "- Do NOT fabricate or hallucinate citations to the user's uploaded documents."
-                ),
-            )
-            citations = []
+        citations = []
+        pqa_result["status"] = "general"
 
     # ------------------------------------------------------------------ #
     # 4. Extract common fields

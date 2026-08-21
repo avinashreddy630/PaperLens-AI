@@ -1,6 +1,6 @@
 """
 core/security.py
-Production security and authentication utilities for SS SPARK.
+Production security and authentication utilities for PaperLens AI.
 
 Features:
 - Direct bcrypt password hashing with SHA-256 pre-hashing (bulletproof against long inputs & passlib bug)

@@ -13,7 +13,7 @@ export const Route = createFileRoute("/auth/callback")({
   // We intentionally do NOT use validateSearch here — hash fragments are parsed manually
   // from window.location.hash, because routers don't expose hash params in search.
   validateSearch: () => ({}),
-  head: () => ({ meta: [{ title: "Signing in… | SS Spark" }] }),
+  head: () => ({ meta: [{ title: "Signing in… | PaperLens AI" }] }),
   component: AuthCallbackPage,
 });
 

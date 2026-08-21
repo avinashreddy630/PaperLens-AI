@@ -85,6 +85,7 @@ class ChatSessionDB(Base):
     title: Mapped[str] = mapped_column(String(255), default="New Chat")
     pinned: Mapped[bool] = mapped_column(Boolean, default=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    favorite: Mapped[bool] = mapped_column(Boolean, default=False)
     folder: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     message_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

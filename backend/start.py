@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-start.py — Quick-start helper script for the SS SPARK backend.
+start.py — Quick-start helper script for the PaperLens AI backend.
 
 Usage:
     python start.py
@@ -57,7 +57,7 @@ def check_deps():
 
 
 def start():
-    print("\nStarting SS SPARK Backend ...\n")
+    print("\nStarting PaperLens AI Backend ...\n")
     subprocess.run(
         [
             sys.executable, "-m", "uvicorn",

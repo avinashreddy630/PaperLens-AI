@@ -1,10 +1,10 @@
 """
 backend/create_admin.py
-CLI utility to create a new Admin account or promote an existing user to Admin in SS SPARK / PaperGenius.
+CLI utility to create a new Admin account or promote an existing user to Admin in PaperLens AI.
 
 Usage:
-  python create_admin.py --email admin@ssspark.ai --name "Administrator"
-  python create_admin.py --email admin@ssspark.ai --password "<secure-password>" --name "Administrator"
+  python create_admin.py --email admin@paperlens.ai --name "Administrator"
+  python create_admin.py --email admin@paperlens.ai --password "<secure-password>" --name "Administrator"
   python create_admin.py --promote user@example.com
 """
 
@@ -40,7 +40,7 @@ async def main():
     settings = get_settings()
     await init_db(settings.POSTGRES_URI, settings.POSTGRES_DB_NAME)
 
-    parser = argparse.ArgumentParser(description="Create or promote an Admin account for SS SPARK.")
+    parser = argparse.ArgumentParser(description="Create or promote an Admin account for PaperLens AI.")
     parser.add_argument("--email", type=str, help="Email address for the admin account")
     parser.add_argument("--password", type=str, help="Password for the admin account (or prompted securely)")
     parser.add_argument("--name", type=str, default="Administrator", help="Display name for the admin")

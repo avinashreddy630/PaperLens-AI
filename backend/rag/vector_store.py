@@ -1,6 +1,6 @@
 """
 rag/vector_store.py
-Unified Vector Store Adapter for SS SPARK.
+Unified Vector Store Adapter for PaperLens AI.
 
 Supports:
 - Qdrant (high-performance vector database with multi-tenancy & payload filtering)

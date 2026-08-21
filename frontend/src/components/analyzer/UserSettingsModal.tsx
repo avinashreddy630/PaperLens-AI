@@ -265,10 +265,10 @@ export function UserSettingsModal({
                 <Button
                   variant="destructive"
                   onClick={handleLogout}
-                  className="h-11 justify-start gap-2.5 rounded-xl"
+                  className="h-11 justify-start gap-2.5 rounded-xl cursor-pointer"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span>Log out of SS Spark</span>
+                  <span>Log out of PaperLens AI</span>
                 </Button>
               </div>
             </div>

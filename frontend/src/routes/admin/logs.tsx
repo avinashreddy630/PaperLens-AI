@@ -5,7 +5,7 @@ import { adminApi, type AuditLog } from "@/lib/admin-api";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/logs")({
-  head: () => ({ meta: [{ title: "Audit Logs | SS Spark Admin" }] }),
+  head: () => ({ meta: [{ title: "Audit Logs | PaperLens AI Admin" }] }),
   component: AdminLogsPage,
 });
 

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { adminApi } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/admin/notifications")({
-  head: () => ({ meta: [{ title: "Notifications | SS Spark Admin" }] }),
+  head: () => ({ meta: [{ title: "Notifications | PaperLens AI Admin" }] }),
   component: AdminNotificationsPage,
 });
 

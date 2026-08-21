@@ -1,6 +1,6 @@
 """
 rag/embeddings.py
-Unified Embedding provider for SS SPARK.
+Unified Embedding provider for PaperLens AI.
 
 Supports:
 - Local SentenceTransformers (all-MiniLM-L6-v2) — offline, fast, 384 dimensions

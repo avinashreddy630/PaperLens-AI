@@ -58,10 +58,10 @@ export function AdminSidebar({ currentPath = "" }: AdminSidebarProps) {
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <p className="text-sm font-bold truncate" style={{ fontFamily: "var(--font-display)" }}>
-              SS Spark
+            <p className="text-sm font-bold truncate tracking-tight text-foreground">
+              PaperLens <span className="text-primary font-black">AI</span>
             </p>
-            <p className="text-xs text-muted-foreground">Admin Panel</p>
+            <p className="text-[11px] text-muted-foreground">Admin Console</p>
           </div>
         )}
       </div>

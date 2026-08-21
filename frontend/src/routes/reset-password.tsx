@@ -6,7 +6,7 @@ import { authApi } from "@/lib/api";
 
 export const Route = createFileRoute("/reset-password")({
   validateSearch: (s) => ({ token: String((s as Record<string, unknown>).token ?? "") }),
-  head: () => ({ meta: [{ title: "Reset Password | SS Spark" }] }),
+  head: () => ({ meta: [{ title: "Reset Password | PaperLens AI" }] }),
   component: ResetPasswordPage,
 });
 

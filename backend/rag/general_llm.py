@@ -27,6 +27,17 @@ logger = logging.getLogger(__name__)
 def _get_candidate_models() -> list[str]:
     """Return a priority list of litellm model names based on available API keys."""
     models: list[str] = []
+    
+    # Check Gemini first if provided (super-fast, high accuracy, native multimodal)
+    if os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", ""):
+        key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY", "")
+        os.environ.setdefault("GEMINI_API_KEY", key)
+        os.environ.setdefault("GOOGLE_API_KEY", key)
+        models.extend([
+            "gemini/gemini-flash-lite-latest",
+            "gemini/gemini-3.5-flash",
+            "gemini/gemini-3.7-flash",
+        ])
     if os.getenv("OPENAI_API_KEY", ""):
         models.extend(["gpt-4o-mini", "gpt-4o"])
     if os.getenv("NVIDIA_API_KEY", "") or os.getenv("NVIDIA_NIM_API_KEY", ""):
@@ -36,16 +47,6 @@ def _get_candidate_models() -> list[str]:
         models.extend([
             "nvidia_nim/meta/llama-3.1-8b-instruct",
             "nvidia_nim/meta/llama-3.3-70b-instruct",
-            "nvidia_nim/meta/llama-3.1-70b-instruct",
-        ])
-    if os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", ""):
-        key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY", "")
-        os.environ.setdefault("GEMINI_API_KEY", key)
-        os.environ.setdefault("GOOGLE_API_KEY", key)
-        models.extend([
-            "gemini/gemini-3.5-flash",
-            "gemini/gemini-3.7-flash",
-            "gemini/gemini-flash-lite-latest",
         ])
     if os.getenv("ANTHROPIC_API_KEY", ""):
         models.extend(["claude-3-5-haiku-20241022"])
@@ -96,6 +97,8 @@ async def general_chat(
     """
     try:
         import litellm  # already installed as a PaperQA dependency
+        litellm.telemetry = False
+        litellm.drop_params = True
     except ImportError as exc:
         raise RuntimeError(
             "litellm is not installed. It should be installed as a PaperQA dependency."
@@ -134,9 +137,9 @@ async def general_chat(
             response = await litellm.acompletion(
                 model=model,
                 messages=messages,
-                temperature=0.7,
-                max_tokens=2048,
-                timeout=12.0,
+                temperature=0.2,
+                max_tokens=1024,
+                timeout=10.0,
             )
             answer = response.choices[0].message.content or ""
             cost = 0.0

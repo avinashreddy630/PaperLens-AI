@@ -1,5 +1,5 @@
 # ============================================================
-# Dockerfile for SS SPARK Backend
+# Dockerfile for PaperLens AI Backend
 # ============================================================
 FROM python:3.12-slim
 

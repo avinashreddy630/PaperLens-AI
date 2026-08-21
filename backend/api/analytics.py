@@ -1,6 +1,6 @@
 """
 api/analytics.py
-Analytics and dashboard metrics endpoints for SS SPARK.
+Analytics and dashboard metrics endpoints for PaperLens AI.
 """
 
 from __future__ import annotations

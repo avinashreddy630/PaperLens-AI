@@ -1,5 +1,5 @@
 services:
-  # ── SS SPARK Backend API ────────────────────────────────────
+  # ── PaperLens AI Backend API ────────────────────────────────────
   backend:
     build:
       context: .
@@ -7,8 +7,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - POSTGRES_URI=postgresql+asyncpg://postgres:postgres@postgres:5432/ss_spark
-      - POSTGRES_DB_NAME=ss_spark
+      - POSTGRES_URI=postgresql+asyncpg://postgres:postgres@postgres:5432/paperlens_ai
+      - POSTGRES_DB_NAME=paperlens_ai
       - USE_QDRANT=true
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
@@ -39,11 +39,11 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=ss_spark
+      - POSTGRES_DB=paperlens_ai
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ss_spark"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d paperlens_ai"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -86,35 +86,35 @@ async def send_verification_email(email: str, token: str) -> bool:
     cfg = get_settings()
     link = f"{cfg.FRONTEND_URL}/verify-email?token={token}"
 
-    subject = "Verify your SS SPARK email address"
+    subject = "Verify your PaperLens AI email address"
     html = f"""
     <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
       <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="color: #7c6ff7; font-size: 28px; margin: 0;">SS SPARK</h1>
-        <p style="color: #888; margin-top: 4px;">AI Question Paper Analyzer</p>
+        <h1 style="color: #6366f1; font-size: 28px; margin: 0;">PaperLens AI</h1>
+        <p style="color: #888; margin-top: 4px;">Question Paper Analyzer & Document Intelligence</p>
       </div>
-      <div style="background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1);
+      <div style="background: #111526; border: 1px solid rgba(255,255,255,0.1);
                   border-radius: 16px; padding: 32px;">
         <h2 style="color: #fff; margin-top: 0;">Verify your email address</h2>
         <p style="color: #ccc; line-height: 1.6;">
-          Click the button below to verify your email address and activate your account.
+          Click the button below to verify your email address and activate your PaperLens AI account.
           This link expires in 24 hours.
         </p>
         <div style="text-align: center; margin: 32px 0;">
           <a href="{link}"
-             style="background: linear-gradient(135deg, #7c6ff7, #a855f7);
+             style="background: linear-gradient(135deg, #6366f1, #06b6d4);
                     color: white; padding: 14px 32px; border-radius: 10px;
                     text-decoration: none; font-weight: 600; font-size: 16px;">
             Verify Email Address
           </a>
         </div>
         <p style="color: #666; font-size: 13px;">
-          Or copy this link: <a href="{link}" style="color: #7c6ff7;">{link}</a>
+          Or copy this link: <a href="{link}" style="color: #6366f1;">{link}</a>
         </p>
       </div>
     </div>
     """
-    text = f"Verify your SS SPARK email:\n\n{link}\n\nThis link expires in 24 hours."
+    text = f"Verify your PaperLens AI email:\n\n{link}\n\nThis link expires in 24 hours."
     return await send_email(email, subject, html, text)
 
 
@@ -124,14 +124,14 @@ async def send_password_reset_email(email: str, token: str) -> bool:
     cfg = get_settings()
     link = f"{cfg.FRONTEND_URL}/reset-password?token={token}"
 
-    subject = "Reset your SS SPARK password"
+    subject = "Reset your PaperLens AI password"
     html = f"""
     <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
       <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="color: #7c6ff7; font-size: 28px; margin: 0;">SS SPARK</h1>
-        <p style="color: #888; margin-top: 4px;">AI Question Paper Analyzer</p>
+        <h1 style="color: #6366f1; font-size: 28px; margin: 0;">PaperLens AI</h1>
+        <p style="color: #888; margin-top: 4px;">Question Paper Analyzer & Document Intelligence</p>
       </div>
-      <div style="background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1);
+      <div style="background: #111526; border: 1px solid rgba(255,255,255,0.1);
                   border-radius: 16px; padding: 32px;">
         <h2 style="color: #fff; margin-top: 0;">Reset your password</h2>
         <p style="color: #ccc; line-height: 1.6;">
@@ -140,19 +140,19 @@ async def send_password_reset_email(email: str, token: str) -> bool:
         </p>
         <div style="text-align: center; margin: 32px 0;">
           <a href="{link}"
-             style="background: linear-gradient(135deg, #7c6ff7, #a855f7);
+             style="background: linear-gradient(135deg, #6366f1, #06b6d4);
                     color: white; padding: 14px 32px; border-radius: 10px;
                     text-decoration: none; font-weight: 600; font-size: 16px;">
             Reset Password
           </a>
         </div>
         <p style="color: #666; font-size: 13px;">
-          Or copy this link: <a href="{link}" style="color: #7c6ff7;">{link}</a>
+          Or copy this link: <a href="{link}" style="color: #6366f1;">{link}</a>
         </p>
       </div>
     </div>
     """
-    text = f"Reset your SS SPARK password:\n\n{link}\n\nThis link expires in 1 hour."
+    text = f"Reset your PaperLens AI password:\n\n{link}\n\nThis link expires in 1 hour."
     return await send_email(email, subject, html, text)
 
 
@@ -162,20 +162,22 @@ async def send_admin_notification_email(
     body: str,
 ) -> bool:
     """Send a platform announcement or notification from the admin."""
-    subject = f"[SS SPARK] {title}"
+    subject = f"[PaperLens AI] {title}"
     import html as _html
     safe_title = _html.escape(title)
     safe_body = _html.escape(body).replace("\n", "<br>")
     html_content = f"""
     <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
       <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="color: #7c6ff7; font-size: 28px; margin: 0;">SS SPARK</h1>
+        <h1 style="color: #6366f1; font-size: 28px; margin: 0;">PaperLens AI</h1>
       </div>
-      <div style="background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1);
+      <div style="background: #111526; border: 1px solid rgba(255,255,255,0.1);
                   border-radius: 16px; padding: 32px;">
         <h2 style="color: #fff; margin-top: 0;">{safe_title}</h2>
         <p style="color: #ccc; line-height: 1.6;">{safe_body}</p>
       </div>
     </div>
     """
+    text_content = f"[{title}]\n\n{body}"
+    return await send_email(to_email, subject, html_content, text_content)
     return await send_email(to_email, subject, html_content, body)

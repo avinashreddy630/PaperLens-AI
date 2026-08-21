@@ -11,7 +11,7 @@ import { StatsCard, SystemHealth } from "@/components/admin/StatsCard";
 import { adminApi, type GlobalStats, type SystemHealth as HealthType } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/admin/")({
-  head: () => ({ meta: [{ title: "Admin Dashboard | SS Spark" }] }),
+  head: () => ({ meta: [{ title: "Admin Dashboard | PaperLens AI" }] }),
   component: AdminDashboard,
 });
 

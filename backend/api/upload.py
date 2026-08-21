@@ -1,6 +1,6 @@
 """
 api/upload.py
-Document upload, extraction, and vector indexing endpoint for SS SPARK.
+Document upload, extraction, and vector indexing endpoint for PaperLens AI.
 """
 
 from __future__ import annotations

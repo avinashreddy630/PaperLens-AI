@@ -1,6 +1,6 @@
 """
 services/pdf_service.py
-Document text extraction and chunking service for SS SPARK.
+Document text extraction and chunking service for PaperLens AI.
 
 Supports:
 - PDF (.pdf) via PyMuPDF (fitz)

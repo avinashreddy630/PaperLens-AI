@@ -77,8 +77,13 @@ def _build_settings():
     else:
         embed_name = "all-MiniLM-L6-v2"
 
-    # Pick the best available LLM
-    if openai_key:
+    # Pick the best available LLM (prioritizing Gemini Flash for speed & accuracy)
+    if gemini_key:
+        llm_name = "gemini/gemini-flash-lite-latest"
+        os.environ["GEMINI_API_KEY"] = gemini_key
+        os.environ["GOOGLE_API_KEY"] = gemini_key  # litellm also reads GOOGLE_API_KEY
+        logger.info("PaperQA connector: using Gemini (model=%s)", llm_name)
+    elif openai_key:
         llm_name = "gpt-4o-mini"
         logger.info("PaperQA connector: using OpenAI (model=%s)", llm_name)
     elif nvidia_key:
@@ -86,11 +91,6 @@ def _build_settings():
         os.environ["NVIDIA_API_KEY"] = nvidia_key
         os.environ["NVIDIA_NIM_API_KEY"] = nvidia_key
         logger.info("PaperQA connector: using NVIDIA NIM (model=%s)", llm_name)
-    elif gemini_key:
-        llm_name = "gemini/gemini-3.5-flash"
-        os.environ["GEMINI_API_KEY"] = gemini_key
-        os.environ["GOOGLE_API_KEY"] = gemini_key  # litellm also reads GOOGLE_API_KEY
-        logger.info("PaperQA connector: using Gemini (model=%s)", llm_name)
     elif anthropic_key:
         llm_name = "claude-3-5-haiku-20241022"
         logger.info("PaperQA connector: using Anthropic (model=%s)", llm_name)

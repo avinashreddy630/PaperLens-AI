@@ -1,6 +1,6 @@
 """
 api/documents.py
-Document management endpoints for SS SPARK.
+Document management endpoints for PaperLens AI.
 """
 
 from __future__ import annotations

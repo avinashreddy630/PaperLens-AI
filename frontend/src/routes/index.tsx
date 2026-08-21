@@ -46,13 +46,106 @@ export const Route = createFileRoute("/")({
   component: AnalyzerPage,
 });
 
-// Suggested prompts shown on the empty state (ChatGPT style)
+// Structured prompt cards shown on the empty state
 const SUGGESTED_PROMPTS = [
-  "Which topics repeat most across all papers?",
-  "Explain binary search with an example.",
-  "What are the most important questions for the exam?",
-  "Write a C++ program to implement BFS.",
+  {
+    category: "Exam Analysis",
+    title: "Find Repeating Questions",
+    prompt: "Which topics and questions repeat most frequently across all uploaded papers?",
+    icon: "🎯",
+    badgeColor: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+  },
+  {
+    category: "High-Yield Topics",
+    title: "Most Important Questions",
+    prompt: "What are the most critical and high-weightage questions to prepare for the exam?",
+    icon: "⭐",
+    badgeColor: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+  },
+  {
+    category: "Step-by-Step Solver",
+    title: "Explain Algorithm / Formula",
+    prompt: "Explain binary search and provide an optimized C++/Python implementation with step-by-step trace.",
+    icon: "⚡",
+    badgeColor: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+  },
+  {
+    category: "Quick Revision",
+    title: "Generate Study Cheat Sheet",
+    prompt: "Summarize all key formulas, definitions, and core concepts into a fast revision guide.",
+    icon: "📑",
+    badgeColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+  },
 ];
+
+const DEFAULT_DEMO_SESSIONS: SessionResponse[] = [
+  {
+    id: "c1",
+    user_id: "demo",
+    title: "DBMS 2023 repeated questions",
+    pinned: true,
+    archived: false,
+    favorite: true,
+    folder: "Exam Preparation",
+    message_count: 12,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+  },
+  {
+    id: "c2",
+    user_id: "demo",
+    title: "Operating Systems unit 3 notes",
+    pinned: false,
+    archived: false,
+    favorite: false,
+    folder: "Programming",
+    message_count: 6,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+  },
+  {
+    id: "c3",
+    user_id: "demo",
+    title: "Machine Learning Questions & Loss Functions",
+    pinned: false,
+    archived: false,
+    favorite: true,
+    folder: "Machine Learning",
+    message_count: 8,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+  },
+  {
+    id: "c4",
+    user_id: "demo",
+    title: "Compiler Design Important Topics & LL(1) Parsing",
+    pinned: false,
+    archived: false,
+    favorite: false,
+    folder: "Exam Preparation",
+    message_count: 4,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+  },
+];
+
+function getStoredSessions(): SessionResponse[] {
+  if (typeof window === "undefined") return DEFAULT_DEMO_SESSIONS;
+  try {
+    const raw = localStorage.getItem("paperlens_sessions_v2");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return DEFAULT_DEMO_SESSIONS;
+}
+
+function persistSessions(list: SessionResponse[]) {
+  try {
+    localStorage.setItem("paperlens_sessions_v2", JSON.stringify(list));
+  } catch (e) {}
+}
 
 function AnalyzerPage() {
   const { user, isGuest, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -63,7 +156,7 @@ function AnalyzerPage() {
 
   const [docs, setDocs] = useState<UploadedDoc[]>([]);
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
-  const [sessions, setSessions] = useState<SessionResponse[]>([]);
+  const [sessions, setSessions] = useState<SessionResponse[]>(getStoredSessions);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [docsLoading, setDocsLoading] = useState(false);
@@ -117,7 +210,10 @@ function AnalyzerPage() {
     if (!isAuthenticated) return;
     try {
       const res = await sessionsApi.list();
-      setSessions(res.data);
+      if (res.data && res.data.length > 0) {
+        setSessions(res.data);
+        persistSessions(res.data);
+      }
     } catch (err) {
       console.warn("Could not load chat sessions:", err);
     }
@@ -154,14 +250,188 @@ function AnalyzerPage() {
   const imageDocs = useMemo(() => docs.filter((doc) => doc.kind === "image"), [docs]);
   const fileDocs = useMemo(() => docs.filter((doc) => doc.kind !== "image"), [docs]);
 
-  // Convert SessionResponse to SidebarChat
+  // Convert SessionResponse to SidebarChat (preserving all attributes)
   const sidebarChats = useMemo<SidebarChat[]>(() => {
     return sessions.map((s) => ({
       id: s.id,
       title: s.title || "New Chat",
       subtitle: `${s.message_count || 0} message${s.message_count === 1 ? "" : "s"}`,
+      pinned: Boolean(s.pinned),
+      favorite: Boolean(s.favorite),
+      archived: Boolean(s.archived),
+      folder: s.folder ?? null,
+      createdAt: s.created_at,
+      updatedAt: s.updated_at,
     }));
   }, [sessions]);
+
+  // Handle renaming a chat session
+  const handleRenameChat = useCallback(
+    async (sessionId: string, newTitle: string) => {
+      if (!newTitle.trim()) return;
+      const cleanTitle = newTitle.trim();
+      setSessions((prev) => {
+        const updated = prev.map((s) =>
+          s.id === sessionId
+            ? { ...s, title: cleanTitle, updated_at: new Date().toISOString() }
+            : s,
+        );
+        persistSessions(updated);
+        return updated;
+      });
+      if (isAuthenticated) {
+        try {
+          await sessionsApi.update(sessionId, { title: cleanTitle });
+          toast.success("Chat renamed");
+        } catch (err) {
+          toast.error("Failed to rename chat on server");
+          loadSessions();
+        }
+      } else {
+        toast.success("Chat renamed");
+      }
+    },
+    [isAuthenticated, loadSessions],
+  );
+
+  // Handle pinning / unpinning a chat session
+  const handleTogglePinChat = useCallback(
+    async (sessionId: string, pinned: boolean) => {
+      setSessions((prev) => {
+        const updated = prev.map((s) =>
+          s.id === sessionId
+            ? { ...s, pinned, updated_at: new Date().toISOString() }
+            : s,
+        );
+        persistSessions(updated);
+        return updated;
+      });
+      if (isAuthenticated) {
+        try {
+          await sessionsApi.update(sessionId, { pinned });
+          toast.success(pinned ? "Chat pinned to top" : "Chat unpinned");
+        } catch (err) {
+          toast.error("Failed to update pin status");
+          loadSessions();
+        }
+      } else {
+        toast.success(pinned ? "Chat pinned to top" : "Chat unpinned");
+      }
+    },
+    [isAuthenticated, loadSessions],
+  );
+
+  // Handle favorite / unfavorite a chat session
+  const handleToggleFavoriteChat = useCallback(
+    async (sessionId: string, favorite: boolean) => {
+      setSessions((prev) => {
+        const updated = prev.map((s) =>
+          s.id === sessionId
+            ? { ...s, favorite, updated_at: new Date().toISOString() }
+            : s,
+        );
+        persistSessions(updated);
+        return updated;
+      });
+      if (isAuthenticated) {
+        try {
+          await sessionsApi.update(sessionId, { favorite });
+          toast.success(favorite ? "Added to Favorites" : "Removed from Favorites");
+        } catch (err) {
+          toast.error("Failed to update favorite status");
+          loadSessions();
+        }
+      } else {
+        toast.success(favorite ? "Added to Favorites" : "Removed from Favorites");
+      }
+    },
+    [isAuthenticated, loadSessions],
+  );
+
+  // Handle archiving / unarchiving a chat session
+  const handleToggleArchiveChat = useCallback(
+    async (sessionId: string, archived: boolean) => {
+      setSessions((prev) => {
+        const updated = prev.map((s) =>
+          s.id === sessionId
+            ? { ...s, archived, updated_at: new Date().toISOString() }
+            : s,
+        );
+        persistSessions(updated);
+        return updated;
+      });
+      if (activeChat === sessionId && archived) {
+        setMessages([]);
+        setActiveChat(null);
+      }
+      if (isAuthenticated) {
+        try {
+          await sessionsApi.update(sessionId, { archived });
+          toast.success(archived ? "Chat archived" : "Chat unarchived");
+        } catch (err) {
+          toast.error("Failed to update archive status");
+          loadSessions();
+        }
+      } else {
+        toast.success(archived ? "Chat archived" : "Chat unarchived");
+      }
+    },
+    [activeChat, isAuthenticated, loadSessions],
+  );
+
+  // Handle assigning / removing a folder
+  const handleAssignFolder = useCallback(
+    async (sessionId: string, folder: string | null) => {
+      setSessions((prev) => {
+        const updated = prev.map((s) =>
+          s.id === sessionId
+            ? { ...s, folder, updated_at: new Date().toISOString() }
+            : s,
+        );
+        persistSessions(updated);
+        return updated;
+      });
+      if (isAuthenticated) {
+        try {
+          await sessionsApi.update(sessionId, { folder });
+          toast.success(folder ? `Assigned to ${folder}` : "Removed from folder");
+        } catch (err) {
+          toast.error("Failed to update folder");
+          loadSessions();
+        }
+      } else {
+        toast.success(folder ? `Assigned to ${folder}` : "Removed from folder");
+      }
+    },
+    [isAuthenticated, loadSessions],
+  );
+
+  // Handle deleting a chat session
+  const handleDeleteChat = useCallback(
+    async (sessionId: string) => {
+      setSessions((prev) => {
+        const updated = prev.filter((s) => s.id !== sessionId);
+        persistSessions(updated);
+        return updated;
+      });
+      if (activeChat === sessionId) {
+        setMessages([]);
+        setActiveChat(null);
+      }
+      if (isAuthenticated) {
+        try {
+          await sessionsApi.delete(sessionId);
+          toast.success("Chat deleted");
+        } catch (err) {
+          toast.error("Failed to delete chat");
+          loadSessions();
+        }
+      } else {
+        toast.success("Chat deleted");
+      }
+    },
+    [activeChat, isAuthenticated, loadSessions],
+  );
 
   // Handle selecting a chat session in the sidebar or settings modal
   async function handleSelectChat(sessionId: string) {
@@ -304,12 +574,47 @@ function AnalyzerPage() {
     }, 50);
   }
 
-  // Core send function — accepts optional explicit text (used by regenerate)
+  // Export formatted Revision / Study Sheet
+  const handleExportStudyGuide = useCallback(() => {
+    if (messages.length === 0) return;
+    let docContent = `# PaperLens AI — Exam Revision & Study Guide\n`;
+    docContent += `Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}\n\n---\n\n`;
+
+    messages.forEach((m, idx) => {
+      if (m.role === "user") {
+        docContent += `## ❓ Question ${Math.floor(idx / 2) + 1}\n${m.content}\n\n`;
+      } else {
+        docContent += `### 💡 Answer\n${m.content}\n\n`;
+        if (m.citations && m.citations.length > 0) {
+          docContent += `**Verified Sources & Citations:**\n`;
+          m.citations.forEach((c) => {
+            docContent += `- **${c.source}** (Page ${c.page}) — Relevance: ${Math.round(c.relevance * 100)}%\n`;
+          });
+          docContent += `\n`;
+        }
+        docContent += `---\n\n`;
+      }
+    });
+
+    const blob = new Blob([docContent], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `PaperLens_Study_Guide_${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Exam Study Guide downloaded successfully!");
+  }, [messages]);
+
+  // Core send function — accepts optional explicit text (used by regenerate & suggestion chips)
   async function sendMessage(text: string) {
     if (!text.trim() || loading) return;
+    const cleanText = text.trim();
+    const isFirstQuestion = messages.length === 0;
+
     setMessages((current) => [
       ...current,
-      { id: `u-${Date.now()}`, role: "user", content: text, createdAt: new Date() },
+      { id: `u-${Date.now()}`, role: "user", content: cleanText, createdAt: new Date() },
     ]);
     setInput("");
     setLoading(true);
@@ -317,11 +622,14 @@ function AnalyzerPage() {
     if (isAuthenticated) {
       try {
         const sessionId = activeChat ?? undefined;
-        const res = await chatApi.send(text, sessionId);
+        const res = await chatApi.send(cleanText, sessionId);
         const d = res.data;
 
         if (d.session_id && !activeChat) {
           setActiveChat(d.session_id);
+          // Auto-generate clean session title from first question
+          const autoTitle = cleanText.length > 38 ? cleanText.slice(0, 38).trim() + "…" : cleanText;
+          void sessionsApi.update(d.session_id, { title: autoTitle }).catch(() => {});
         }
 
         setMessages((current) => [
@@ -333,7 +641,7 @@ function AnalyzerPage() {
             createdAt: new Date(),
             confidence: d.confidence ?? undefined,
             status: d.status,
-            // FIX: preserve all citation fields including id and relevance
+            // Preserve all citation fields including id and relevance
             citations: d.citations.map((c) => ({
               id: c.id,
               source: c.source,
@@ -400,6 +708,12 @@ function AnalyzerPage() {
         onOpenSettings={() => setSettingsOpen(true)}
         search={search}
         onSearch={setSearch}
+        onRenameChat={handleRenameChat}
+        onTogglePinChat={handleTogglePinChat}
+        onToggleFavoriteChat={handleToggleFavoriteChat}
+        onToggleArchiveChat={handleToggleArchiveChat}
+        onAssignFolder={handleAssignFolder}
+        onDeleteChat={handleDeleteChat}
       />
 
       {/* ── Main content column ── */}
@@ -413,42 +727,54 @@ function AnalyzerPage() {
           onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
           docCount={docs.length}
           onOpenSearchPad={() => setSearchPadOpen(true)}
+          onExportGuide={handleExportStudyGuide}
+          hasMessages={hasMessages}
         />
 
         {/* ── Scrollable chat area ── */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
-          {/* ── Empty / Welcome state — ChatGPT style ── */}
+          {/* ── Empty / Welcome state — Minimalist AI Workspace (ChatGPT Style) ── */}
           {!hasMessages && !loading && (
-            <div className="flex h-full flex-col items-center justify-center px-4 py-12 text-center">
-              {/* Brand logo */}
-              <div className="relative mb-6">
-                <span className="absolute inset-0 -z-10 rounded-full blur-3xl gradient-brand opacity-20" />
-                <span className="grid h-20 w-20 place-items-center rounded-3xl gradient-brand shadow-xl">
-                  <BrainCircuit className="h-10 w-10 text-white" />
-                </span>
+            <div className="flex h-full flex-col items-center justify-center px-4 py-8 text-center">
+              {/* Brand Logo */}
+              <div className="mb-4">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl border border-primary/30 bg-primary/10 text-primary shadow-xs">
+                  <BrainCircuit className="h-6 w-6" />
+                </div>
               </div>
-              <h1 className="text-3xl font-bold sm:text-4xl">
-                <span className="gradient-text">What can I help with?</span>
+
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl text-foreground">
+                What would you like to solve or analyze?
               </h1>
-              <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-                Ask me anything — general knowledge, coding problems, or questions about your
-                uploaded documents. Answers grounded in your files include citations and page
-                numbers.
+              <p className="mx-auto mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                Upload question papers, textbooks, and notes. Ask questions to get cited answers, repeated exam topics, and step-by-step problem solutions.
               </p>
 
-              {/* Suggested prompts */}
-              <div className="mt-8 grid w-full max-w-xl gap-2 sm:grid-cols-2">
-                {SUGGESTED_PROMPTS.map((prompt) => (
+              {/* Categorized prompt cards */}
+              <div className="mt-6 grid w-full max-w-2xl gap-2.5 sm:grid-cols-2 text-left">
+                {SUGGESTED_PROMPTS.map((item) => (
                   <button
-                    key={prompt}
+                    key={item.title}
                     onClick={() => {
-                      setInput(prompt);
-                      setTimeout(() => sendMessage(prompt), 50);
+                      setInput(item.prompt);
+                      setTimeout(() => sendMessage(item.prompt), 50);
                     }}
-                    className="group rounded-2xl border border-border/60 bg-card/60 px-4 py-3 text-left text-sm text-muted-foreground transition-all hover:border-primary/50 hover:bg-accent hover:text-foreground"
+                    className="group flex flex-col justify-between rounded-xl border border-border bg-card/80 p-3.5 hover:border-primary/40 hover:bg-card transition-colors cursor-pointer"
                   >
-                    <Sparkles className="mb-1 h-4 w-4 text-chart-2 transition-colors group-hover:text-primary" />
-                    {prompt}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-base">{item.icon}</span>
+                        <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium border ${item.badgeColor}`}>
+                          {item.category}
+                        </span>
+                      </div>
+                      <h3 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                        {item.prompt}
+                      </p>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -457,10 +783,12 @@ function AnalyzerPage() {
               {docs.length > 0 && (
                 <button
                   onClick={() => setSearchPadOpen(true)}
-                  className="mt-6 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                  className="mt-5 inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground hover:border-border/80 hover:text-foreground transition-colors cursor-pointer"
                 >
-                  <FileText className="h-3.5 w-3.5 text-chart-1" />
-                  {docs.length} document{docs.length !== 1 ? "s" : ""} loaded · Click to open Search Pad
+                  <FileText className="h-3.5 w-3.5 text-primary" />
+                  <span>{docs.length} document{docs.length !== 1 ? "s" : ""} indexed</span>
+                  <span className="text-muted-foreground/60">·</span>
+                  <span className="text-primary font-medium">Search Pad ⌘K</span>
                 </button>
               )}
             </div>
@@ -469,11 +797,13 @@ function AnalyzerPage() {
           {/* ── Chat messages ── */}
           {(hasMessages || loading) && (
             <div className="mx-auto w-full max-w-3xl space-y-6 px-1 py-6 sm:px-2">
-              {messages.map((message) => (
+              {messages.map((message, idx) => (
                 <ChatMessage
                   key={message.id}
                   message={message}
                   onRegenerate={handleRegenerate}
+                  onSelectPrompt={(prompt) => sendMessage(prompt)}
+                  isLatest={idx === messages.length - 1}
                 />
               ))}
               {loading && <TypingIndicator />}
