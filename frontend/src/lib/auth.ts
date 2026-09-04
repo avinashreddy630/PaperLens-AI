@@ -110,6 +110,7 @@ export function setStoredTokens(access: string, refresh: string, user?: User): v
 export function clearStoredAuth(): void {
   try {
     Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
+    localStorage.removeItem("paperlens_sessions_v2");
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(STORAGE_KEYS.GUEST);
     }

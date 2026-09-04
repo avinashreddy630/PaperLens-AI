@@ -80,68 +80,25 @@ const SUGGESTED_PROMPTS = [
   },
 ];
 
-const DEFAULT_DEMO_SESSIONS: SessionResponse[] = [
-  {
-    id: "c1",
-    user_id: "demo",
-    title: "DBMS 2023 repeated questions",
-    pinned: true,
-    archived: false,
-    favorite: true,
-    folder: "Exam Preparation",
-    message_count: 12,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: "c2",
-    user_id: "demo",
-    title: "Operating Systems unit 3 notes",
-    pinned: false,
-    archived: false,
-    favorite: false,
-    folder: "Programming",
-    message_count: 6,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-  },
-  {
-    id: "c3",
-    user_id: "demo",
-    title: "Machine Learning Questions & Loss Functions",
-    pinned: false,
-    archived: false,
-    favorite: true,
-    folder: "Machine Learning",
-    message_count: 8,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-  },
-  {
-    id: "c4",
-    user_id: "demo",
-    title: "Compiler Design Important Topics & LL(1) Parsing",
-    pinned: false,
-    archived: false,
-    favorite: false,
-    folder: "Exam Preparation",
-    message_count: 4,
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
-    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-  },
-];
-
 function getStoredSessions(): SessionResponse[] {
-  if (typeof window === "undefined") return DEFAULT_DEMO_SESSIONS;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem("paperlens_sessions_v2");
     if (raw) {
       const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        // Filter out any legacy demo mock sessions
+        return parsed.filter(
+          (s: SessionResponse) =>
+            s.user_id !== "demo" &&
+            !["c1", "c2", "c3", "c4"].includes(s.id),
+        );
+      }
     }
   } catch {
     // Ignore parse error
   }
-  return DEFAULT_DEMO_SESSIONS;
+  return [];
 }
 
 function persistSessions(list: SessionResponse[]) {
@@ -215,7 +172,7 @@ function AnalyzerPage() {
     if (!isAuthenticated) return;
     try {
       const res = await sessionsApi.list();
-      if (res.data && res.data.length > 0) {
+      if (res.data) {
         setSessions(res.data);
         persistSessions(res.data);
       }
