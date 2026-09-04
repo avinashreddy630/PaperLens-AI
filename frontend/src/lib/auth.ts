@@ -99,6 +99,9 @@ export function setStoredTokens(access: string, refresh: string, user?: User): v
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
     }
     localStorage.removeItem(STORAGE_KEYS.GUEST);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(STORAGE_KEYS.GUEST);
+    }
   } catch {
     // Silently fail in restricted environments
   }
@@ -107,6 +110,9 @@ export function setStoredTokens(access: string, refresh: string, user?: User): v
 export function clearStoredAuth(): void {
   try {
     Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(STORAGE_KEYS.GUEST);
+    }
   } catch {
     // Silently fail
   }
@@ -164,11 +170,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initAuth = async () => {
       const access = getStoredAccessToken();
       const refresh = getStoredRefreshToken();
-      const guestMode = localStorage.getItem(STORAGE_KEYS.GUEST) === "true";
+
+      // Clean up legacy localStorage guest flag so fresh visits require login
+      try {
+        localStorage.removeItem(STORAGE_KEYS.GUEST);
+      } catch {
+        // Silently fail
+      }
+
+      const guestMode =
+        typeof window !== "undefined" &&
+        sessionStorage.getItem(STORAGE_KEYS.GUEST) === "true";
 
       // Hydrate cached user immediately to prevent unauthenticated UI flicker
       const cachedUserStr = localStorage.getItem(STORAGE_KEYS.USER);
-      if (cachedUserStr) {
+      if (cachedUserStr && access) {
         try {
           const cachedUser = JSON.parse(cachedUserStr);
           setUser(cachedUser);
@@ -187,6 +203,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (!access || !refresh) {
+        setUser(null);
+        setTokensState(null);
         setIsLoading(false);
         return;
       }
@@ -301,7 +319,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const setGuest = () => {
-    localStorage.setItem(STORAGE_KEYS.GUEST, "true");
+    try {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(STORAGE_KEYS.GUEST, "true");
+        localStorage.removeItem(STORAGE_KEYS.GUEST);
+      }
+    } catch {
+      // Silently fail
+    }
     setIsGuestState(true);
     setUser(null);
     setTokensState(null);

@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 key = os.getenv("GEMINI_API_KEY")
-os.environ["GEMINI_API_KEY"] = key
-os.environ["GOOGLE_API_KEY"] = key
+if key:
+    os.environ["GEMINI_API_KEY"] = key
+    os.environ["GOOGLE_API_KEY"] = key
 
 candidate_models = [
     "gemini/gemini-2.5-flash",

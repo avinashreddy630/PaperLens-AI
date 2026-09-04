@@ -11,12 +11,7 @@ import {
   Clock,
   ExternalLink,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -69,14 +64,8 @@ export function SearchPadModal({
     );
   }, [docs, query, activeTab]);
 
-  const pdfCount = useMemo(
-    () => docs.filter((d) => d.kind !== "image").length,
-    [docs],
-  );
-  const imageCount = useMemo(
-    () => docs.filter((d) => d.kind === "image").length,
-    [docs],
-  );
+  const pdfCount = useMemo(() => docs.filter((d) => d.kind !== "image").length, [docs]);
+  const imageCount = useMemo(() => docs.filter((d) => d.kind === "image").length, [docs]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -151,7 +140,9 @@ export function SearchPadModal({
                     <div className="py-12 text-center">
                       <FileText className="mx-auto h-10 w-10 text-muted-foreground/40" />
                       <p className="mt-3 text-sm font-medium text-foreground">
-                        {query ? "No documents match your search query." : "No documents uploaded yet."}
+                        {query
+                          ? "No documents match your search query."
+                          : "No documents uploaded yet."}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {query
@@ -191,7 +182,10 @@ export function SearchPadModal({
                                 </span>
                               )}
                               <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-foreground" title={doc.name}>
+                                <p
+                                  className="truncate text-sm font-semibold text-foreground"
+                                  title={doc.name}
+                                >
                                   {doc.name}
                                 </p>
                                 <p className="truncate text-[11px] text-muted-foreground">

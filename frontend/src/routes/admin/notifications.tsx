@@ -51,7 +51,9 @@ function AdminNotificationsPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>Notifications</h1>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>
+          Notifications
+        </h1>
         <p className="text-sm text-muted-foreground mt-1">Send platform announcements and alerts</p>
       </div>
 
@@ -103,7 +105,10 @@ function AdminNotificationsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">
-                Target User ID <span className="text-muted-foreground font-normal">(leave blank for broadcast)</span>
+                Target User ID{" "}
+                <span className="text-muted-foreground font-normal">
+                  (leave blank for broadcast)
+                </span>
               </label>
               <input
                 value={userId}
@@ -117,7 +122,15 @@ function AdminNotificationsPage() {
               disabled={loading}
               className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold gradient-brand text-brand-foreground shadow-lg shadow-orange-950/30 transition-all disabled:opacity-60 hover-lift"
             >
-              {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</> : <><Send className="h-4 w-4" /> Send Notification</>}
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Sending…
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" /> Send Notification
+                </>
+              )}
             </button>
           </form>
         </div>
@@ -127,16 +140,23 @@ function AdminNotificationsPage() {
           <h2 className="text-lg font-semibold mb-4" style={{ fontFamily: "var(--font-display)" }}>
             Preview
           </h2>
-          <div className="rounded-xl border p-4 transition-all"
-               style={{
-                 background: kindStyles[kind]?.bg ?? kindStyles.info.bg,
-                 borderColor: kindStyles[kind]?.color ?? kindStyles.info.color,
-               }}>
+          <div
+            className="rounded-xl border p-4 transition-all"
+            style={{
+              background: kindStyles[kind]?.bg ?? kindStyles.info.bg,
+              borderColor: kindStyles[kind]?.color ?? kindStyles.info.color,
+            }}
+          >
             <div className="flex items-start gap-3">
-              <Bell className="h-5 w-5 flex-shrink-0 mt-0.5"
-                    style={{ color: kindStyles[kind]?.color ?? kindStyles.info.color }} />
+              <Bell
+                className="h-5 w-5 flex-shrink-0 mt-0.5"
+                style={{ color: kindStyles[kind]?.color ?? kindStyles.info.color }}
+              />
               <div>
-                <p className="font-semibold text-sm" style={{ color: kindStyles[kind]?.color ?? kindStyles.info.color }}>
+                <p
+                  className="font-semibold text-sm"
+                  style={{ color: kindStyles[kind]?.color ?? kindStyles.info.color }}
+                >
                   {title || "Notification title"}
                 </p>
                 <p className="text-sm text-foreground/80 mt-1 whitespace-pre-wrap">
@@ -154,10 +174,18 @@ function AdminNotificationsPage() {
             <p className="text-sm font-medium">Tips:</p>
             <ul className="text-xs text-muted-foreground space-y-1.5">
               <li>• Leave User ID blank to send to all users (broadcast)</li>
-              <li>• Use <strong>info</strong> for general announcements</li>
-              <li>• Use <strong>warning</strong> for maintenance notices</li>
-              <li>• Use <strong>success</strong> for feature launches</li>
-              <li>• Use <strong>error</strong> for urgent alerts</li>
+              <li>
+                • Use <strong>info</strong> for general announcements
+              </li>
+              <li>
+                • Use <strong>warning</strong> for maintenance notices
+              </li>
+              <li>
+                • Use <strong>success</strong> for feature launches
+              </li>
+              <li>
+                • Use <strong>error</strong> for urgent alerts
+              </li>
             </ul>
           </div>
         </div>

@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Activity, AlertCircle, CheckCircle2, Clock, FileText, MessageSquare, RefreshCw, Zap,
+  Activity,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  FileText,
+  MessageSquare,
+  RefreshCw,
+  Zap,
 } from "lucide-react";
 import { adminApi } from "@/lib/admin-api";
 import type { SystemHealth } from "@/lib/admin-api";
@@ -29,7 +36,9 @@ function AdminAIMonitoringPage() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const getStatusIcon = (status: string) => {
     if (status === "ok") return <CheckCircle2 className="h-5 w-5 text-emerald-400" />;
@@ -82,14 +91,18 @@ function AdminAIMonitoringPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>AI Monitoring</h1>
+          <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>
+            AI Monitoring
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Real-time status of AI services and vector store
             {lastRefreshed && ` · Last refreshed ${lastRefreshed.toLocaleTimeString()}`}
           </p>
         </div>
-        <button onClick={load}
-                className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm hover:bg-accent transition-colors">
+        <button
+          onClick={load}
+          className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm hover:bg-accent transition-colors"
+        >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh
         </button>
       </div>
@@ -103,11 +116,20 @@ function AdminAIMonitoringPage() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {services.map(({ name, icon, status, details }) => (
-            <div key={name} className="rounded-2xl border border-border p-5" style={{ background: "var(--card)" }}>
+            <div
+              key={name}
+              className="rounded-2xl border border-border p-5"
+              style={{ background: "var(--card)" }}
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl"
-                       style={{ background: "color-mix(in oklab, var(--primary) 18%, transparent)", color: "var(--primary)" }}>
+                  <div
+                    className="p-2 rounded-xl"
+                    style={{
+                      background: "color-mix(in oklab, var(--primary) 18%, transparent)",
+                      color: "var(--primary)",
+                    }}
+                  >
                     {icon}
                   </div>
                   <div>
@@ -132,7 +154,9 @@ function AdminAIMonitoringPage() {
 
       {/* Tips */}
       <div className="rounded-2xl border border-border p-5" style={{ background: "var(--card)" }}>
-        <h3 className="text-sm font-semibold mb-3" style={{ fontFamily: "var(--font-display)" }}>About the AI Stack</h3>
+        <h3 className="text-sm font-semibold mb-3" style={{ fontFamily: "var(--font-display)" }}>
+          About the AI Stack
+        </h3>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm text-muted-foreground">
           <div>
             <p className="font-medium text-foreground mb-1">PaperQA</p>

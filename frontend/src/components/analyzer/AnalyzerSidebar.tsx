@@ -72,12 +72,7 @@ export const PRESET_FOLDERS = [
 ];
 
 export type SortOption =
-  | "updated_desc"
-  | "created_desc"
-  | "created_asc"
-  | "title_asc"
-  | "favorites"
-  | "pinned";
+  "updated_desc" | "created_desc" | "created_asc" | "title_asc" | "favorites" | "pinned";
 
 export interface SidebarChat {
   id: string;
@@ -242,17 +237,15 @@ export function AnalyzerSidebar({
   }, [docs, search]);
 
   // Dynamic user profile info
-  const userName = isAuthenticated && user
-    ? user.full_name.trim() || user.email.split("@")[0]
-    : isGuest
-    ? "Guest Explorer"
-    : "Guest User";
+  const userName =
+    isAuthenticated && user
+      ? user.full_name.trim() || user.email.split("@")[0]
+      : isGuest
+        ? "Guest Explorer"
+        : "Guest User";
 
-  const userSubtitle = isAuthenticated && user
-    ? user.role === "admin"
-      ? "Administrator"
-      : user.email
-    : "Guest mode";
+  const userSubtitle =
+    isAuthenticated && user ? (user.role === "admin" ? "Administrator" : user.email) : "Guest mode";
 
   const initials = useMemo(() => {
     if (isAuthenticated && user) {
@@ -465,9 +458,7 @@ export function AnalyzerSidebar({
                         <span>{f.icon}</span>
                         <span>{f.label}</span>
                       </span>
-                      {activeFolderFilter === f.label && (
-                        <Check className="h-3 w-3 text-primary" />
-                      )}
+                      {activeFolderFilter === f.label && <Check className="h-3 w-3 text-primary" />}
                     </DropdownMenuItem>
                   ))}
                   {activeFolderFilter && (
@@ -612,9 +603,7 @@ export function AnalyzerSidebar({
                     <Plus className="h-3.5 w-3.5" />
                   </div>
                   <div className="text-left">
-                    <p className="font-medium leading-tight text-foreground">
-                      Add Papers & Exams
-                    </p>
+                    <p className="font-medium leading-tight text-foreground">Add Papers & Exams</p>
                     <p className="text-[10px] text-muted-foreground">PDF, Images, DOCX</p>
                   </div>
                 </div>
@@ -1003,10 +992,7 @@ function ChatItemRow({
                 className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 cursor-pointer text-foreground hover:bg-muted"
               >
                 <Star
-                  className={cn(
-                    "h-3.5 w-3.5 text-amber-400",
-                    chat.favorite && "fill-amber-400",
-                  )}
+                  className={cn("h-3.5 w-3.5 text-amber-400", chat.favorite && "fill-amber-400")}
                 />
                 <span>{chat.favorite ? "Remove from Favorites" : "Add to Favorites"}</span>
               </DropdownMenuItem>

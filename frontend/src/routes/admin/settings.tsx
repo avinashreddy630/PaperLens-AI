@@ -15,13 +15,16 @@ function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    adminApi.getSettings().then((res) => {
-      setSettings(res.data);
-      setLoading(false);
-    }).catch(() => {
-      toast.error("Failed to load settings");
-      setLoading(false);
-    });
+    adminApi
+      .getSettings()
+      .then((res) => {
+        setSettings(res.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        toast.error("Failed to load settings");
+        setLoading(false);
+      });
   }, []);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -53,24 +56,37 @@ function AdminSettingsPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>System Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Configure platform-wide AI and file settings</p>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>
+          System Settings
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Configure platform-wide AI and file settings
+        </p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6 max-w-2xl">
         {/* AI Models */}
-        <div className="rounded-2xl border border-border p-5 space-y-4" style={{ background: "var(--card)" }}>
-          <h2 className="text-sm font-semibold" style={{ fontFamily: "var(--font-display)" }}>AI Configuration</h2>
+        <div
+          className="rounded-2xl border border-border p-5 space-y-4"
+          style={{ background: "var(--card)" }}
+        >
+          <h2 className="text-sm font-semibold" style={{ fontFamily: "var(--font-display)" }}>
+            AI Configuration
+          </h2>
 
           {[
             { key: "llm_model", label: "LLM Model", placeholder: "gpt-4o-mini" },
-            { key: "embedding_model", label: "Embedding Model", placeholder: "text-embedding-3-small" },
+            {
+              key: "embedding_model",
+              label: "Embedding Model",
+              placeholder: "text-embedding-3-small",
+            },
             { key: "ocr_engine", label: "OCR Engine", placeholder: "tesseract" },
           ].map(({ key, label, placeholder }) => (
             <div key={key}>
               <label className="block text-sm font-medium mb-2">{label}</label>
               <input
-                value={(settings as Record<string, unknown>)[key] as string ?? ""}
+                value={((settings as Record<string, unknown>)[key] as string) ?? ""}
                 onChange={(e) => set(key, e.target.value)}
                 placeholder={placeholder}
                 className="w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
@@ -86,7 +102,7 @@ function AdminSettingsPage() {
               <label className="block text-sm font-medium mb-2">{label}</label>
               <input
                 type="number"
-                value={(settings as Record<string, unknown>)[key] as number ?? 0}
+                value={((settings as Record<string, unknown>)[key] as number) ?? 0}
                 onChange={(e) => set(key, Number(e.target.value))}
                 min={min}
                 max={max}
@@ -97,8 +113,13 @@ function AdminSettingsPage() {
         </div>
 
         {/* File settings */}
-        <div className="rounded-2xl border border-border p-5 space-y-4" style={{ background: "var(--card)" }}>
-          <h2 className="text-sm font-semibold" style={{ fontFamily: "var(--font-display)" }}>File Upload Settings</h2>
+        <div
+          className="rounded-2xl border border-border p-5 space-y-4"
+          style={{ background: "var(--card)" }}
+        >
+          <h2 className="text-sm font-semibold" style={{ fontFamily: "var(--font-display)" }}>
+            File Upload Settings
+          </h2>
 
           <div>
             <label className="block text-sm font-medium mb-2">Max Upload Size (MB)</label>
@@ -127,11 +148,15 @@ function AdminSettingsPage() {
 
         {/* Maintenance */}
         <div className="rounded-2xl border border-border p-5" style={{ background: "var(--card)" }}>
-          <h2 className="text-sm font-semibold mb-4" style={{ fontFamily: "var(--font-display)" }}>Maintenance</h2>
+          <h2 className="text-sm font-semibold mb-4" style={{ fontFamily: "var(--font-display)" }}>
+            Maintenance
+          </h2>
           <label className="flex items-center justify-between cursor-pointer">
             <div>
               <p className="text-sm font-medium">Maintenance Mode</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Prevent non-admin users from accessing the platform</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Prevent non-admin users from accessing the platform
+              </p>
             </div>
             <div
               onClick={() => set("maintenance_mode", !settings.maintenance_mode)}
@@ -142,7 +167,9 @@ function AdminSettingsPage() {
             >
               <span
                 className="inline-block h-4 w-4 rounded-full bg-white shadow transition-transform"
-                style={{ transform: settings.maintenance_mode ? "translateX(22px)" : "translateX(2px)" }}
+                style={{
+                  transform: settings.maintenance_mode ? "translateX(22px)" : "translateX(2px)",
+                }}
               />
             </div>
           </label>
@@ -153,7 +180,15 @@ function AdminSettingsPage() {
           disabled={saving}
           className="flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold gradient-brand text-brand-foreground shadow-lg shadow-orange-950/30 transition-all disabled:opacity-60 hover-lift"
         >
-          {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <><Save className="h-4 w-4" /> Save Settings</>}
+          {saving ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> Saving…
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" /> Save Settings
+            </>
+          )}
         </button>
       </form>
     </div>

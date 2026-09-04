@@ -22,7 +22,7 @@ import {
 } from "@/lib/analyzer";
 import { useAuth } from "@/lib/auth";
 import { chatApi, documentsApi, sessionsApi, type SessionResponse } from "@/lib/api";
-import { BrainCircuit, FileText, Sparkles, Search } from "lucide-react";
+import { BrainCircuit, FileText, Sparkles, Search, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -65,14 +65,16 @@ const SUGGESTED_PROMPTS = [
   {
     category: "Step-by-Step Solver",
     title: "Explain Algorithm / Formula",
-    prompt: "Explain binary search and provide an optimized C++/Python implementation with step-by-step trace.",
+    prompt:
+      "Explain binary search and provide an optimized C++/Python implementation with step-by-step trace.",
     icon: "⚡",
     badgeColor: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
   },
   {
     category: "Quick Revision",
     title: "Generate Study Cheat Sheet",
-    prompt: "Summarize all key formulas, definitions, and core concepts into a fast revision guide.",
+    prompt:
+      "Summarize all key formulas, definitions, and core concepts into a fast revision guide.",
     icon: "📑",
     badgeColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
   },
@@ -135,16 +137,19 @@ function getStoredSessions(): SessionResponse[] {
     const raw = localStorage.getItem("paperlens_sessions_v2");
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
-  } catch (e) {}
+  } catch {
+    // Ignore parse error
+  }
   return DEFAULT_DEMO_SESSIONS;
 }
 
 function persistSessions(list: SessionResponse[]) {
   try {
     localStorage.setItem("paperlens_sessions_v2", JSON.stringify(list));
-  } catch (e) {}
+  } catch {
+    // Ignore storage quota error
+  }
 }
 
 function AnalyzerPage() {
@@ -299,9 +304,7 @@ function AnalyzerPage() {
     async (sessionId: string, pinned: boolean) => {
       setSessions((prev) => {
         const updated = prev.map((s) =>
-          s.id === sessionId
-            ? { ...s, pinned, updated_at: new Date().toISOString() }
-            : s,
+          s.id === sessionId ? { ...s, pinned, updated_at: new Date().toISOString() } : s,
         );
         persistSessions(updated);
         return updated;
@@ -326,9 +329,7 @@ function AnalyzerPage() {
     async (sessionId: string, favorite: boolean) => {
       setSessions((prev) => {
         const updated = prev.map((s) =>
-          s.id === sessionId
-            ? { ...s, favorite, updated_at: new Date().toISOString() }
-            : s,
+          s.id === sessionId ? { ...s, favorite, updated_at: new Date().toISOString() } : s,
         );
         persistSessions(updated);
         return updated;
@@ -353,9 +354,7 @@ function AnalyzerPage() {
     async (sessionId: string, archived: boolean) => {
       setSessions((prev) => {
         const updated = prev.map((s) =>
-          s.id === sessionId
-            ? { ...s, archived, updated_at: new Date().toISOString() }
-            : s,
+          s.id === sessionId ? { ...s, archived, updated_at: new Date().toISOString() } : s,
         );
         persistSessions(updated);
         return updated;
@@ -384,9 +383,7 @@ function AnalyzerPage() {
     async (sessionId: string, folder: string | null) => {
       setSessions((prev) => {
         const updated = prev.map((s) =>
-          s.id === sessionId
-            ? { ...s, folder, updated_at: new Date().toISOString() }
-            : s,
+          s.id === sessionId ? { ...s, folder, updated_at: new Date().toISOString() } : s,
         );
         persistSessions(updated);
         return updated;
@@ -553,7 +550,9 @@ function AnalyzerPage() {
         });
       }
     } else {
-      toast.success(`${added.length} file${added.length > 1 ? "s" : ""} added (guest mode — not saved)`);
+      toast.success(
+        `${added.length} file${added.length > 1 ? "s" : ""} added (guest mode — not saved)`,
+      );
     }
   }
 
@@ -564,7 +563,10 @@ function AnalyzerPage() {
     setInput(lastUserMsg.content);
     // Remove last assistant response to re-ask
     setMessages((current) => {
-      const lastAssistantIdx = [...current].map((m, i) => ({ m, i })).reverse().find(({ m }) => m.role === "assistant");
+      const lastAssistantIdx = [...current]
+        .map((m, i) => ({ m, i }))
+        .reverse()
+        .find(({ m }) => m.role === "assistant");
       if (lastAssistantIdx) return current.slice(0, lastAssistantIdx.i);
       return current;
     });
@@ -689,6 +691,23 @@ function AnalyzerPage() {
 
   const hasMessages = messages.length > 0;
 
+  // Loading state while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-xs text-muted-foreground">Loading workspace...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Prevent rendering analyzer dashboard if unauthenticated
+  if (!isAuthenticated && !isGuest) {
+    return null;
+  }
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* ── Left sidebar ── */}
@@ -747,7 +766,8 @@ function AnalyzerPage() {
                 What would you like to solve or analyze?
               </h1>
               <p className="mx-auto mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-muted-foreground">
-                Upload question papers, textbooks, and notes. Ask questions to get cited answers, repeated exam topics, and step-by-step problem solutions.
+                Upload question papers, textbooks, and notes. Ask questions to get cited answers,
+                repeated exam topics, and step-by-step problem solutions.
               </p>
 
               {/* Categorized prompt cards */}
@@ -764,7 +784,9 @@ function AnalyzerPage() {
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-base">{item.icon}</span>
-                        <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium border ${item.badgeColor}`}>
+                        <span
+                          className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium border ${item.badgeColor}`}
+                        >
                           {item.category}
                         </span>
                       </div>
@@ -786,7 +808,9 @@ function AnalyzerPage() {
                   className="mt-5 inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground hover:border-border/80 hover:text-foreground transition-colors cursor-pointer"
                 >
                   <FileText className="h-3.5 w-3.5 text-primary" />
-                  <span>{docs.length} document{docs.length !== 1 ? "s" : ""} indexed</span>
+                  <span>
+                    {docs.length} document{docs.length !== 1 ? "s" : ""} indexed
+                  </span>
                   <span className="text-muted-foreground/60">·</span>
                   <span className="text-primary font-medium">Search Pad ⌘K</span>
                 </button>
@@ -827,11 +851,7 @@ function AnalyzerPage() {
                 </TabsList>
                 <TabsContent value="documents" className="mt-3 grid gap-2 sm:grid-cols-2">
                   {fileDocs.map((doc) => (
-                    <UploadCard
-                      key={doc.id}
-                      doc={doc}
-                      onDelete={() => removeDoc(doc.id)}
-                    />
+                    <UploadCard key={doc.id} doc={doc} onDelete={() => removeDoc(doc.id)} />
                   ))}
                   {fileDocs.length === 0 && (
                     <p className="text-xs text-muted-foreground">No documents yet.</p>
@@ -839,11 +859,7 @@ function AnalyzerPage() {
                 </TabsContent>
                 <TabsContent value="images" className="mt-3 grid gap-2 sm:grid-cols-3">
                   {imageDocs.map((doc) => (
-                    <ImagePreviewCard
-                      key={doc.id}
-                      doc={doc}
-                      onDelete={() => removeDoc(doc.id)}
-                    />
+                    <ImagePreviewCard key={doc.id} doc={doc} onDelete={() => removeDoc(doc.id)} />
                   ))}
                   {imageDocs.length === 0 && (
                     <p className="text-xs text-muted-foreground">

@@ -12,7 +12,14 @@ interface ChatComposerProps {
   loading: boolean;
 }
 
-export function ChatComposer({ value, onChange, onSend, onStop, onFiles, loading }: ChatComposerProps) {
+export function ChatComposer({
+  value,
+  onChange,
+  onSend,
+  onStop,
+  onFiles,
+  loading,
+}: ChatComposerProps) {
   const docInput = useRef<HTMLInputElement>(null);
   const imageInput = useRef<HTMLInputElement>(null);
 
@@ -113,7 +120,8 @@ export function ChatComposer({ value, onChange, onSend, onStop, onFiles, loading
 
         {/* Branded Footer Disclaimer */}
         <p className="mt-2 text-center text-[11px] text-muted-foreground">
-          PaperLens AI can make mistakes. Verify critical exam formulas against original syllabus papers.
+          PaperLens AI can make mistakes. Verify critical exam formulas against original syllabus
+          papers.
         </p>
       </div>
     </div>

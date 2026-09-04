@@ -28,9 +28,24 @@ export function EmptyState({ onFiles }: { onFiles: (files: File[]) => void }) {
 
       <div className="mt-5 grid w-full gap-2.5 sm:grid-cols-3">
         {[
-          { label: "Past Exam Papers", desc: "PDF & DOCX", icon: FileText, color: "text-indigo-400" },
-          { label: "Textbooks & Notes", desc: "Multi-chapter study material", icon: BookOpen, color: "text-cyan-400" },
-          { label: "Handwritten Sheets", desc: "Instant Tesseract OCR", icon: Camera, color: "text-emerald-400" },
+          {
+            label: "Past Exam Papers",
+            desc: "PDF & DOCX",
+            icon: FileText,
+            color: "text-indigo-400",
+          },
+          {
+            label: "Textbooks & Notes",
+            desc: "Multi-chapter study material",
+            icon: BookOpen,
+            color: "text-cyan-400",
+          },
+          {
+            label: "Handwritten Sheets",
+            desc: "Instant Tesseract OCR",
+            icon: Camera,
+            color: "text-emerald-400",
+          },
         ].map((item) => (
           <div
             key={item.label}

@@ -38,16 +38,24 @@ function AdminUsersPage() {
     }
   };
 
-  useEffect(() => { load(); }, [page, roleFilter, statusFilter]);
+  useEffect(() => {
+    load();
+  }, [page, roleFilter, statusFilter]);
 
-  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); setPage(0); load(); };
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(0);
+    load();
+  };
 
   const handleSuspend = async (id: string, email: string) => {
     try {
       await adminApi.suspendUser(id);
       toast.success(`${email} suspended`);
       load();
-    } catch { toast.error("Failed to suspend user"); }
+    } catch {
+      toast.error("Failed to suspend user");
+    }
   };
 
   const handleActivate = async (id: string, email: string) => {
@@ -55,7 +63,9 @@ function AdminUsersPage() {
       await adminApi.activateUser(id);
       toast.success(`${email} activated`);
       load();
-    } catch { toast.error("Failed to activate user"); }
+    } catch {
+      toast.error("Failed to activate user");
+    }
   };
 
   const handleDelete = async (id: string, email: string) => {
@@ -64,7 +74,9 @@ function AdminUsersPage() {
       await adminApi.deleteUser(id);
       toast.success("User deleted");
       load();
-    } catch { toast.error("Failed to delete user"); }
+    } catch {
+      toast.error("Failed to delete user");
+    }
   };
 
   const handleRoleToggle = async (id: string, currentRole: string) => {
@@ -73,7 +85,9 @@ function AdminUsersPage() {
       await adminApi.changeRole(id, newRole);
       toast.success(`Role changed to ${newRole}`);
       load();
-    } catch { toast.error("Failed to change role"); }
+    } catch {
+      toast.error("Failed to change role");
+    }
   };
 
   const statusColor: Record<string, string> = {
@@ -90,7 +104,9 @@ function AdminUsersPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>User Management</h1>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: "var(--font-display)" }}>
+          User Management
+        </h1>
         <p className="text-sm text-muted-foreground mt-1">{total} total users</p>
       </div>
 
@@ -108,7 +124,10 @@ function AdminUsersPage() {
         </form>
         <select
           value={roleFilter}
-          onChange={(e) => { setRoleFilter(e.target.value); setPage(0); }}
+          onChange={(e) => {
+            setRoleFilter(e.target.value);
+            setPage(0);
+          }}
           className="rounded-xl border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">All Roles</option>
@@ -117,7 +136,10 @@ function AdminUsersPage() {
         </select>
         <select
           value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(0);
+          }}
           className="rounded-xl border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">All Statuses</option>
@@ -128,7 +150,10 @@ function AdminUsersPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl border border-border overflow-hidden" style={{ background: "var(--card)" }}>
+      <div
+        className="rounded-2xl border border-border overflow-hidden"
+        style={{ background: "var(--card)" }}
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -148,22 +173,34 @@ function AdminUsersPage() {
                   <tr key={i} className="border-b border-border">
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 rounded bg-muted animate-pulse" style={{ width: j === 0 ? "140px" : "60px" }} />
+                        <div
+                          className="h-4 rounded bg-muted animate-pulse"
+                          style={{ width: j === 0 ? "140px" : "60px" }}
+                        />
                       </td>
                     ))}
                   </tr>
                 ))
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-muted-foreground">No users found.</td>
+                  <td colSpan={7} className="text-center py-12 text-muted-foreground">
+                    No users found.
+                  </td>
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="border-b border-border hover:bg-accent/30 transition-colors">
+                  <tr
+                    key={user.id}
+                    className="border-b border-border hover:bg-accent/30 transition-colors"
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {user.avatar_url ? (
-                          <img src={user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                          <img
+                            src={user.avatar_url}
+                            alt=""
+                            className="h-8 w-8 rounded-full object-cover"
+                          />
                         ) : (
                           <div className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold gradient-brand text-brand-foreground">
                             {(user.full_name || user.email)[0].toUpperCase()}
@@ -179,7 +216,10 @@ function AdminUsersPage() {
                       <span
                         className="rounded-full px-2 py-0.5 text-xs font-medium"
                         style={{
-                          background: user.role === "admin" ? "color-mix(in oklab, var(--primary) 18%, transparent)" : "var(--secondary)",
+                          background:
+                            user.role === "admin"
+                              ? "color-mix(in oklab, var(--primary) 18%, transparent)"
+                              : "var(--secondary)",
                           color: user.role === "admin" ? "var(--primary)" : undefined,
                         }}
                       >

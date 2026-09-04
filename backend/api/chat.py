@@ -41,12 +41,33 @@ async def chat_endpoint(
         )
 
     user_id = current_user.id if current_user else None
-    result = await ask_question(
-        question=req.question.strip(),
-        session_id=req.session_id,
-        user_id=user_id,
-    )
-    return result
+    try:
+        result = await ask_question(
+            question=req.question.strip(),
+            session_id=req.session_id,
+            user_id=user_id,
+        )
+        return result
+    except Exception as exc:
+        logger.exception("Error processing chat request: %s", exc)
+        return {
+            "success": True,
+            "data": {
+                "answer": (
+                    f"⚠️ An unexpected error occurred: `{str(exc)}`\n\n"
+                    "Please check your API key in **Settings (⚙️)** or try again."
+                ),
+                "source": "N/A",
+                "page": 0,
+                "confidence": None,
+                "citations": [],
+                "references": "",
+                "session_id": req.session_id or "",
+                "cost": 0.0,
+                "status": "error",
+            },
+            "message": str(exc),
+        }
 
 
 @router.get("/api/history")

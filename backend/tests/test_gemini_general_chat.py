@@ -4,10 +4,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Set env keys
 key = os.getenv("GEMINI_API_KEY")
-os.environ["GEMINI_API_KEY"] = key
-os.environ["GOOGLE_API_KEY"] = key
+if key:
+    os.environ["GEMINI_API_KEY"] = key
+    os.environ["GOOGLE_API_KEY"] = key
 
 import sys
 from pathlib import Path

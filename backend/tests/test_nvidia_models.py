@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 key = os.getenv("NVIDIA_API_KEY")
-os.environ["NVIDIA_API_KEY"] = key
-os.environ["NVIDIA_NIM_API_KEY"] = key
+if key:
+    os.environ["NVIDIA_API_KEY"] = key
+    os.environ["NVIDIA_NIM_API_KEY"] = key
 
 candidate_models = [
     "nvidia_nim/meta/llama-3.1-70b-instruct",

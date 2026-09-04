@@ -5,7 +5,13 @@
  * handles token refresh, and provides typed wrappers for all backend endpoints.
  */
 
-import { getStoredAccessToken, getStoredRefreshToken, isTokenExpired, clearStoredAuth, setStoredTokens } from "./auth";
+import {
+  getStoredAccessToken,
+  getStoredRefreshToken,
+  isTokenExpired,
+  clearStoredAuth,
+  setStoredTokens,
+} from "./auth";
 
 // -------------------------------------------------------------------------- //
 // Base fetcher
@@ -50,10 +56,7 @@ async function _getValidToken(): Promise<string | null> {
   return null;
 }
 
-export async function apiFetch<T = unknown>(
-  path: string,
-  options: FetchOptions = {},
-): Promise<T> {
+export async function apiFetch<T = unknown>(path: string, options: FetchOptions = {}): Promise<T> {
   const { skipAuth = false, headers = {}, ...rest } = options;
   const authHeaders: Record<string, string> = {};
 
@@ -76,7 +79,7 @@ export async function apiFetch<T = unknown>(
     });
   } catch (netErr: unknown) {
     throw new Error(
-      `Cannot connect to backend server at ${API_BASE}. Please ensure the FastAPI server is running.`
+      `Cannot connect to backend server at ${API_BASE}. Please ensure the FastAPI server is running.`,
     );
   }
 
@@ -92,10 +95,7 @@ export async function apiFetch<T = unknown>(
   return response.json() as Promise<T>;
 }
 
-export async function apiUpload<T = unknown>(
-  path: string,
-  formData: FormData,
-): Promise<T> {
+export async function apiUpload<T = unknown>(path: string, formData: FormData): Promise<T> {
   const token = await _getValidToken();
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -153,11 +153,9 @@ export const authApi = {
 // -------------------------------------------------------------------------- //
 
 export const documentsApi = {
-  list: () =>
-    apiFetch<{ success: boolean; data: DocumentResponse[] }>("/api/documents"),
+  list: () => apiFetch<{ success: boolean; data: DocumentResponse[] }>("/api/documents"),
 
-  delete: (docId: string) =>
-    apiFetch(`/api/documents/${docId}`, { method: "DELETE" }),
+  delete: (docId: string) => apiFetch(`/api/documents/${docId}`, { method: "DELETE" }),
 
   rename: (docId: string, name: string) =>
     apiFetch(`/api/documents/${docId}`, {
@@ -208,8 +206,7 @@ export const sessionsApi = {
       body: JSON.stringify(updates),
     }),
 
-  delete: (id: string) =>
-    apiFetch(`/api/sessions/${id}`, { method: "DELETE" }),
+  delete: (id: string) => apiFetch(`/api/sessions/${id}`, { method: "DELETE" }),
 };
 
 // -------------------------------------------------------------------------- //
@@ -217,16 +214,14 @@ export const sessionsApi = {
 // -------------------------------------------------------------------------- //
 
 export const analyticsApi = {
-  userStats: () =>
-    apiFetch<{ success: boolean; data: UserStats }>("/api/analytics/user"),
+  userStats: () => apiFetch<{ success: boolean; data: UserStats }>("/api/analytics/user"),
 
   activity: (days?: number) =>
     apiFetch<{ success: boolean; data: ActivityDay[] }>(
       `/api/analytics/activity${days ? `?days=${days}` : ""}`,
     ),
 
-  panelStats: () =>
-    apiFetch<{ success: boolean; data: PanelStats }>("/api/analytics/panel"),
+  panelStats: () => apiFetch<{ success: boolean; data: PanelStats }>("/api/analytics/panel"),
 };
 
 // -------------------------------------------------------------------------- //
@@ -234,10 +229,8 @@ export const analyticsApi = {
 // -------------------------------------------------------------------------- //
 
 export const notificationsApi = {
-  list: () =>
-    apiFetch<{ success: boolean; data: NotificationItem[] }>("/api/notifications"),
-  markRead: () =>
-    apiFetch("/api/notifications/read", { method: "POST" }),
+  list: () => apiFetch<{ success: boolean; data: NotificationItem[] }>("/api/notifications"),
+  markRead: () => apiFetch("/api/notifications/read", { method: "POST" }),
 };
 
 // -------------------------------------------------------------------------- //

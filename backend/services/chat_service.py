@@ -164,6 +164,18 @@ async def ask_question(
             system_prompt=grounded_system_prompt,
         )
 
+        if pqa_result.get("status") == "warning":
+            context_summary = "\n\n".join(
+                [f"**From {c.source} (Page {c.page}):**\n> {c.text.strip()}" for c in retrieved_chunks[:3]]
+            )
+            pqa_result["answer"] = (
+                f"### 📄 Relevant Document Excerpts Found\n\n"
+                f"{context_summary}\n\n"
+                f"---\n\n"
+                f"💡 *To generate full AI answers and step-by-step reasoning, add an API key in **Settings (⚙️) → AI Model Keys** or in `backend/.env`.*"
+            )
+            pqa_result["status"] = "partial"
+
         # Build precise citations
         citations: List[Dict[str, Any]] = [
             {
@@ -179,7 +191,8 @@ async def ask_question(
         # Compute dynamic confidence score based on top chunk relevance
         top_rel = retrieved_chunks[0].relevance if retrieved_chunks else 0.8
         pqa_result["confidence"] = round(min(0.98, max(0.65, top_rel + 0.15)), 2)
-        pqa_result["status"] = "success"
+        if pqa_result.get("status") != "partial":
+            pqa_result["status"] = "success"
 
     else:
         logger.info(

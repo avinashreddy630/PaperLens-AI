@@ -1,8 +1,19 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
-  BarChart3, Bell, Bot, ChevronLeft, ChevronRight, FileText, Home,
-  LogOut, MessageSquare, Settings, Shield, Upload, Users,
+  BarChart3,
+  Bell,
+  Bot,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Home,
+  LogOut,
+  MessageSquare,
+  Settings,
+  Shield,
+  Upload,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -70,14 +81,17 @@ export function AdminSidebar({ currentPath = "" }: AdminSidebarProps) {
       <nav className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-1 px-2">
           {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
-            const active = currentPath === path || (path !== "/admin" && currentPath.startsWith(path));
+            const active =
+              currentPath === path || (path !== "/admin" && currentPath.startsWith(path));
             return (
               <li key={path}>
                 <Link
                   to={path as any}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all"
                   style={{
-                    background: active ? "color-mix(in oklab, var(--primary) 18%, transparent)" : "transparent",
+                    background: active
+                      ? "color-mix(in oklab, var(--primary) 18%, transparent)"
+                      : "transparent",
                     color: active ? "var(--primary)" : undefined,
                     fontWeight: active ? "600" : undefined,
                   }}
@@ -97,7 +111,11 @@ export function AdminSidebar({ currentPath = "" }: AdminSidebarProps) {
         {!collapsed && user && (
           <div className="flex items-center gap-2 mb-3 px-1">
             {user.avatar_url ? (
-              <img src={user.avatar_url} alt={user.full_name} className="h-7 w-7 rounded-full object-cover" />
+              <img
+                src={user.avatar_url}
+                alt={user.full_name}
+                className="h-7 w-7 rounded-full object-cover"
+              />
             ) : (
               <div className="h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold gradient-brand text-brand-foreground">
                 {(user.full_name || user.email || "A").charAt(0).toUpperCase()}

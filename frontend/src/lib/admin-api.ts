@@ -73,7 +73,13 @@ export interface SystemSettings {
 
 export const adminApi = {
   // Users
-  getUsers: (params?: { skip?: number; limit?: number; search?: string; role?: string; status?: string }) => {
+  getUsers: (params?: {
+    skip?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+    status?: string;
+  }) => {
     const qs = new URLSearchParams();
     if (params?.skip) qs.set("skip", String(params.skip));
     if (params?.limit) qs.set("limit", String(params.limit));
@@ -81,7 +87,7 @@ export const adminApi = {
     if (params?.role) qs.set("role", params.role);
     if (params?.status) qs.set("status", params.status);
     return apiFetch<{ success: boolean; data: AdminUser[]; total: number }>(
-      `/api/admin/users?${qs.toString()}`
+      `/api/admin/users?${qs.toString()}`,
     );
   },
 
@@ -91,14 +97,11 @@ export const adminApi = {
   editUser: (id: string, updates: Partial<AdminUser>) =>
     apiFetch(`/api/admin/users/${id}`, { method: "PATCH", body: JSON.stringify(updates) }),
 
-  deleteUser: (id: string) =>
-    apiFetch(`/api/admin/users/${id}`, { method: "DELETE" }),
+  deleteUser: (id: string) => apiFetch(`/api/admin/users/${id}`, { method: "DELETE" }),
 
-  suspendUser: (id: string) =>
-    apiFetch(`/api/admin/users/${id}/suspend`, { method: "POST" }),
+  suspendUser: (id: string) => apiFetch(`/api/admin/users/${id}/suspend`, { method: "POST" }),
 
-  activateUser: (id: string) =>
-    apiFetch(`/api/admin/users/${id}/activate`, { method: "POST" }),
+  activateUser: (id: string) => apiFetch(`/api/admin/users/${id}/activate`, { method: "POST" }),
 
   changeRole: (id: string, role: "user" | "admin") =>
     apiFetch(`/api/admin/users/${id}/role`, { method: "POST", body: JSON.stringify({ role }) }),
@@ -110,28 +113,26 @@ export const adminApi = {
     if (params?.limit) qs.set("limit", String(params.limit));
     if (params?.search) qs.set("search", params.search);
     return apiFetch<{ success: boolean; data: AdminDocument[]; total: number }>(
-      `/api/admin/documents?${qs.toString()}`
+      `/api/admin/documents?${qs.toString()}`,
     );
   },
 
-  deleteDocument: (id: string) =>
-    apiFetch(`/api/admin/documents/${id}`, { method: "DELETE" }),
+  deleteDocument: (id: string) => apiFetch(`/api/admin/documents/${id}`, { method: "DELETE" }),
 
   reindexDocument: (id: string) =>
     apiFetch(`/api/admin/documents/${id}/reindex`, { method: "POST" }),
 
   // Analytics
-  getStats: () =>
-    apiFetch<{ success: boolean; data: GlobalStats }>("/api/admin/analytics"),
+  getStats: () => apiFetch<{ success: boolean; data: GlobalStats }>("/api/admin/analytics"),
 
   getActivity: (days?: number) =>
-    apiFetch<{ success: boolean; data: Array<{ date: string; questions: number; uploads: number }> }>(
-      `/api/admin/analytics/activity${days ? `?days=${days}` : ""}`
-    ),
+    apiFetch<{
+      success: boolean;
+      data: Array<{ date: string; questions: number; uploads: number }>;
+    }>(`/api/admin/analytics/activity${days ? `?days=${days}` : ""}`),
 
   // System
-  getSystemHealth: () =>
-    apiFetch<{ success: boolean; data: SystemHealth }>("/api/admin/system"),
+  getSystemHealth: () => apiFetch<{ success: boolean; data: SystemHealth }>("/api/admin/system"),
 
   // Logs
   getLogs: (params?: { user_id?: string; action?: string; skip?: number; limit?: number }) => {
@@ -141,13 +142,12 @@ export const adminApi = {
     if (params?.skip) qs.set("skip", String(params.skip));
     if (params?.limit) qs.set("limit", String(params.limit));
     return apiFetch<{ success: boolean; data: AuditLog[]; total: number }>(
-      `/api/admin/logs?${qs.toString()}`
+      `/api/admin/logs?${qs.toString()}`,
     );
   },
 
   // Settings
-  getSettings: () =>
-    apiFetch<{ success: boolean; data: SystemSettings }>("/api/admin/settings"),
+  getSettings: () => apiFetch<{ success: boolean; data: SystemSettings }>("/api/admin/settings"),
 
   updateSettings: (updates: Partial<SystemSettings>) =>
     apiFetch("/api/admin/settings", { method: "PATCH", body: JSON.stringify(updates) }),

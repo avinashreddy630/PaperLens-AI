@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Eye, EyeOff, Loader2, LogIn, BrainCircuit, CheckCircle2, ShieldCheck, Zap, Layers } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  LogIn,
+  BrainCircuit,
+  CheckCircle2,
+  ShieldCheck,
+  Zap,
+  Layers,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { API_BASE } from "@/lib/api";
 
@@ -9,7 +19,10 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Sign In | PaperLens AI" },
-      { name: "description", content: "Sign in to PaperLens AI — AI Question Paper Analyzer & Document Intelligence" },
+      {
+        name: "description",
+        content: "Sign in to PaperLens AI — AI Question Paper Analyzer & Document Intelligence",
+      },
     ],
   }),
   component: LoginPage,
@@ -61,6 +74,7 @@ function LoginPage() {
     try {
       await login(email, password);
       toast.success("Welcome back to PaperLens AI!");
+      navigate({ to: "/" });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -75,7 +89,9 @@ function LoginPage() {
       if (!res.ok) throw new Error("Backend unavailable");
       window.location.href = `${API_BASE}/api/auth/oauth/google`;
     } catch {
-      toast.error(`Cannot connect to backend server at ${API_BASE}. Please ensure the FastAPI server is running.`);
+      toast.error(
+        `Cannot connect to backend server at ${API_BASE}. Please ensure the FastAPI server is running.`,
+      );
     }
   };
 
@@ -105,18 +121,37 @@ function LoginPage() {
           </div>
 
           <h1 className="text-4xl font-extrabold text-white tracking-tight mb-3">
-            PaperLens <span className="bg-gradient-to-r from-indigo-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent">AI</span>
+            PaperLens{" "}
+            <span className="bg-gradient-to-r from-indigo-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+              AI
+            </span>
           </h1>
           <p className="text-base text-white/70 leading-relaxed mb-8">
-            Academic document intelligence & question paper analyzer. Upload past papers and notes to get document-grounded answers with exact citations.
+            Academic document intelligence & question paper analyzer. Upload past papers and notes
+            to get document-grounded answers with exact citations.
           </p>
 
           {/* Feature Highlights */}
           <div className="grid grid-cols-3 gap-3 text-left">
             {[
-              { title: "Exact Citations", desc: "Page-level references", icon: Layers, color: "text-indigo-400" },
-              { title: "Smart OCR", desc: "Instant text extraction", icon: Zap, color: "text-cyan-400" },
-              { title: "Exam Trends", desc: "Repeating questions", icon: ShieldCheck, color: "text-emerald-400" },
+              {
+                title: "Exact Citations",
+                desc: "Page-level references",
+                icon: Layers,
+                color: "text-indigo-400",
+              },
+              {
+                title: "Smart OCR",
+                desc: "Instant text extraction",
+                icon: Zap,
+                color: "text-cyan-400",
+              },
+              {
+                title: "Exam Trends",
+                desc: "Repeating questions",
+                icon: ShieldCheck,
+                color: "text-emerald-400",
+              },
             ].map(({ title, desc, icon: Icon, color }) => (
               <div
                 key={title}
@@ -165,10 +200,22 @@ function LoginPage() {
               className="flex w-full items-center justify-center gap-3 rounded-xl border border-border/60 bg-surface/80 px-4 py-2.5 text-sm font-medium text-foreground transition-all hover:bg-surface-elevated hover:border-primary/40 cursor-pointer shadow-xs"
             >
               <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" aria-hidden="true">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                />
               </svg>
               Continue with Google
             </a>
@@ -189,7 +236,10 @@ function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-foreground/90 mb-1.5">
+              <label
+                htmlFor="email"
+                className="block text-xs font-semibold text-foreground/90 mb-1.5"
+              >
                 Email Address
               </label>
               <input
@@ -197,7 +247,10 @@ function LoginPage() {
                 type="email"
                 autoComplete="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setErrors((p) => ({ ...p, email: undefined })); }}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrors((p) => ({ ...p, email: undefined }));
+                }}
                 placeholder="you@example.com"
                 className="w-full rounded-xl border border-border/60 bg-surface/60 px-3.5 py-2.5 text-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary/40"
                 style={{ borderColor: errors.email ? "var(--destructive)" : undefined }}
@@ -207,10 +260,16 @@ function LoginPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="block text-xs font-semibold text-foreground/90">
+                <label
+                  htmlFor="password"
+                  className="block text-xs font-semibold text-foreground/90"
+                >
                   Password
                 </label>
-                <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-medium text-primary hover:underline"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -220,7 +279,10 @@ function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setErrors((p) => ({ ...p, password: undefined })); }}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors((p) => ({ ...p, password: undefined }));
+                  }}
                   placeholder="••••••••"
                   className="w-full rounded-xl border border-border/60 bg-surface/60 px-3.5 py-2.5 pr-10 text-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary/40"
                   style={{ borderColor: errors.password ? "var(--destructive)" : undefined }}
@@ -234,7 +296,9 @@ function LoginPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password}</p>}
+              {errors.password && (
+                <p className="mt-1 text-xs text-destructive">{errors.password}</p>
+              )}
             </div>
 
             <button
@@ -244,9 +308,13 @@ function LoginPage() {
               className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gradient-to-r from-indigo-500 via-blue-600 to-cyan-500 text-white shadow-md shadow-indigo-500/25 transition-all hover:shadow-lg hover:shadow-indigo-500/40 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 cursor-pointer"
             >
               {isLoading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Signing in…</>
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Signing in…
+                </>
               ) : (
-                <><LogIn className="h-4 w-4" /> Sign In</>
+                <>
+                  <LogIn className="h-4 w-4" /> Sign In
+                </>
               )}
             </button>
           </form>

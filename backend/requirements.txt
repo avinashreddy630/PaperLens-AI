@@ -20,6 +20,9 @@ numpy
 rich
 tenacity
 tiktoken>=0.4.0
+fhlmi>=0.45.0
+pybtex>=0.24.0
+tantivy>=0.22.0
 
 # ── LLM API Clients (LiteLLM used internally) ────────────────
 litellm>=1.0.0

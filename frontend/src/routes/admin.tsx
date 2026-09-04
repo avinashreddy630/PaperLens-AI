@@ -6,10 +6,7 @@ import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
-    meta: [
-      { title: "Admin Dashboard | PaperLens AI" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Admin Dashboard | PaperLens AI" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminLayout,
 });

@@ -19,8 +19,14 @@ function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) { setError("Please enter your email"); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("Enter a valid email"); return; }
+    if (!email) {
+      setError("Please enter your email");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Enter a valid email");
+      return;
+    }
 
     setIsLoading(true);
     setError("");
@@ -52,12 +58,17 @@ function ForgotPasswordPage() {
                 <Mail className="h-7 w-7" />
               </div>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight mb-2 text-foreground">Check your inbox</h2>
+            <h2 className="text-2xl font-bold tracking-tight mb-2 text-foreground">
+              Check your inbox
+            </h2>
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              If an account exists for <strong>{email}</strong>, we've sent a password reset link. Check your spam folder too.
+              If an account exists for <strong>{email}</strong>, we've sent a password reset link.
+              Check your spam folder too.
             </p>
-            <Link to="/login"
-                  className="inline-flex items-center gap-2 text-xs font-semibold text-primary hover:underline">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-primary hover:underline"
+            >
               <ArrowLeft className="h-4 w-4" /> Back to sign in
             </Link>
           </div>
@@ -72,12 +83,17 @@ function ForgotPasswordPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div>
-                <label className="block text-xs font-semibold text-foreground/90 mb-1.5">Email Address</label>
+                <label className="block text-xs font-semibold text-foreground/90 mb-1.5">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   autoComplete="email"
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError("");
+                  }}
                   placeholder="you@example.com"
                   className="w-full rounded-xl border border-border/60 bg-surface/60 px-3.5 py-2.5 text-sm outline-none transition-all placeholder:text-muted-foreground/60 focus:border-primary focus:ring-1 focus:ring-primary/40"
                   style={{ borderColor: error ? "var(--destructive)" : undefined }}
@@ -91,7 +107,9 @@ function ForgotPasswordPage() {
                 className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold bg-gradient-to-r from-indigo-500 via-blue-600 to-cyan-500 text-white shadow-md shadow-indigo-500/25 transition-all hover:shadow-lg hover:shadow-indigo-500/40 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 cursor-pointer"
               >
                 {isLoading ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Sending Link…</>
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Sending Link…
+                  </>
                 ) : (
                   "Send Reset Link"
                 )}
@@ -99,8 +117,10 @@ function ForgotPasswordPage() {
             </form>
 
             <div className="mt-6 text-center">
-              <Link to="/login"
-                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <ArrowLeft className="h-3.5 w-3.5" /> Back to sign in
               </Link>
             </div>

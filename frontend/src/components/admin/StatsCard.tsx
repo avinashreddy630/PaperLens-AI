@@ -9,7 +9,14 @@ interface StatsCardProps {
   color?: string;
 }
 
-export function StatsCard({ title, value, subtitle, icon, trend, color = "oklch(0.68 0.22 45)" }: StatsCardProps) {
+export function StatsCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  trend,
+  color = "oklch(0.68 0.22 45)",
+}: StatsCardProps) {
   const isPositive = (trend?.value ?? 0) >= 0;
 
   return (
@@ -84,10 +91,7 @@ export function SystemHealth({ items }: { items: HealthItem[] }) {
         {items.map(({ name, status, detail }) => (
           <div key={name} className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div
-                className="h-2 w-2 rounded-full"
-                style={{ background: statusColor[status] }}
-              />
+              <div className="h-2 w-2 rounded-full" style={{ background: statusColor[status] }} />
               <span className="text-sm">{name}</span>
             </div>
             <span

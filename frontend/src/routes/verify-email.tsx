@@ -31,7 +31,9 @@ function VerifyEmailPage() {
       })
       .catch((err: unknown) => {
         setStatus("error");
-        setMessage(err instanceof Error ? err.message : "Verification failed. The link may be expired.");
+        setMessage(
+          err instanceof Error ? err.message : "Verification failed. The link may be expired.",
+        );
       });
   }, [token, navigate]);
 
@@ -47,7 +49,9 @@ function VerifyEmailPage() {
         {status === "loading" && (
           <>
             <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-display)" }}>Verifying your email…</h2>
+            <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-display)" }}>
+              Verifying your email…
+            </h2>
             <p className="text-muted-foreground">Please wait a moment.</p>
           </>
         )}
@@ -55,10 +59,15 @@ function VerifyEmailPage() {
         {status === "success" && (
           <>
             <CheckCircle className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-display)" }}>Email verified!</h2>
+            <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-display)" }}>
+              Email verified!
+            </h2>
             <p className="text-muted-foreground mb-6">{message}</p>
             <p className="text-sm text-muted-foreground">Redirecting to your dashboard…</p>
-            <Link to="/" className="mt-4 inline-flex items-center gap-2 text-primary text-sm hover:underline">
+            <Link
+              to="/"
+              className="mt-4 inline-flex items-center gap-2 text-primary text-sm hover:underline"
+            >
               Go to dashboard now →
             </Link>
           </>
@@ -67,11 +76,15 @@ function VerifyEmailPage() {
         {status === "error" && (
           <>
             <XCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-display)" }}>Verification failed</h2>
+            <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-display)" }}>
+              Verification failed
+            </h2>
             <p className="text-muted-foreground mb-6">{message}</p>
             <div className="flex flex-col gap-3 items-center">
-              <Link to="/login"
-                    className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold gradient-brand text-brand-foreground shadow-lg shadow-orange-950/30 hover-lift">
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold gradient-brand text-brand-foreground shadow-lg shadow-orange-950/30 hover-lift"
+              >
                 Go to Sign In
               </Link>
               <p className="text-xs text-muted-foreground">

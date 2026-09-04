@@ -65,9 +65,20 @@ export function ChatMessage({
 
   // Subtle suggestion chips
   const smartSuggestions = [
-    { label: "3 Practice Questions", prompt: "Generate 3 high-yield exam practice questions based on this topic with answer hints." },
-    { label: "Flashcard Summary", prompt: "Summarize this into 3 concise question-answer study flashcards for fast revision." },
-    { label: "Step-by-Step Code / Math", prompt: "Provide a detailed step-by-step mathematical derivation and code implementation for this." },
+    {
+      label: "3 Practice Questions",
+      prompt:
+        "Generate 3 high-yield exam practice questions based on this topic with answer hints.",
+    },
+    {
+      label: "Flashcard Summary",
+      prompt: "Summarize this into 3 concise question-answer study flashcards for fast revision.",
+    },
+    {
+      label: "Step-by-Step Code / Math",
+      prompt:
+        "Provide a detailed step-by-step mathematical derivation and code implementation for this.",
+    },
   ];
 
   // ─── Assistant Message — Natural Conversational Layout (ChatGPT Style) ───
@@ -85,9 +96,7 @@ export function ChatMessage({
         <div className="min-w-0 flex-1 pb-2">
           {/* Header row: Model Name + Grounded/General Badge + Confidence */}
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className="text-[13px] font-semibold text-foreground">
-              PaperLens AI
-            </span>
+            <span className="text-[13px] font-semibold text-foreground">PaperLens AI</span>
 
             {message.status === "general" ? (
               <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
@@ -134,7 +143,10 @@ export function ChatMessage({
                   >
                     <span>{contextOpen ? "Hide excerpts" : "View excerpts"}</span>
                     <ChevronDown
-                      className={cn("h-3 w-3 transition-transform duration-200", contextOpen && "rotate-180")}
+                      className={cn(
+                        "h-3 w-3 transition-transform duration-200",
+                        contextOpen && "rotate-180",
+                      )}
                     />
                   </button>
                 </div>

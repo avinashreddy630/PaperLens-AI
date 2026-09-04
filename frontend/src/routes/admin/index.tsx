@@ -1,11 +1,25 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  BarChart3, Bot, Database, FileText, HardDrive, MessageSquare,
-  RefreshCw, Server, Users, Zap,
+  BarChart3,
+  Bot,
+  Database,
+  FileText,
+  HardDrive,
+  MessageSquare,
+  RefreshCw,
+  Server,
+  Users,
+  Zap,
 } from "lucide-react";
 import {
-  AreaChart, Area, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  AreaChart,
+  Area,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { StatsCard, SystemHealth } from "@/components/admin/StatsCard";
 import { adminApi, type GlobalStats, type SystemHealth as HealthType } from "@/lib/admin-api";
@@ -17,7 +31,9 @@ export const Route = createFileRoute("/admin/")({
 
 function AdminDashboard() {
   const [stats, setStats] = useState<GlobalStats | null>(null);
-  const [activity, setActivity] = useState<Array<{ date: string; questions: number; uploads: number }>>([]);
+  const [activity, setActivity] = useState<
+    Array<{ date: string; questions: number; uploads: number }>
+  >([]);
   const [health, setHealth] = useState<HealthType | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,13 +59,29 @@ function AdminDashboard() {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const healthItems = health
     ? [
-        { name: "MongoDB", status: health.mongodb.status as "ok" | "error", detail: health.mongodb.database ?? health.mongodb.error },
-        { name: "ChromaDB", status: health.chromadb.status as "ok" | "error", detail: health.chromadb.chunk_count ? `${health.chromadb.chunk_count} chunks` : health.chromadb.error },
-        { name: "PaperQA", status: health.paperqa.status as "ok" | "error", detail: `${health.paperqa.indexed_documents} docs indexed` },
+        {
+          name: "MongoDB",
+          status: health.mongodb.status as "ok" | "error",
+          detail: health.mongodb.database ?? health.mongodb.error,
+        },
+        {
+          name: "ChromaDB",
+          status: health.chromadb.status as "ok" | "error",
+          detail: health.chromadb.chunk_count
+            ? `${health.chromadb.chunk_count} chunks`
+            : health.chromadb.error,
+        },
+        {
+          name: "PaperQA",
+          status: health.paperqa.status as "ok" | "error",
+          detail: `${health.paperqa.indexed_documents} docs indexed`,
+        },
         { name: "API Server", status: "ok" as const, detail: "Running" },
       ]
     : Array.from({ length: 4 }, (_, i) => ({
@@ -150,14 +182,29 @@ function AdminDashboard() {
       {/* Charts + Health */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Activity chart */}
-        <div className="lg:col-span-2 rounded-2xl border border-border p-5" style={{ background: "var(--card)" }}>
+        <div
+          className="lg:col-span-2 rounded-2xl border border-border p-5"
+          style={{ background: "var(--card)" }}
+        >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold" style={{ fontFamily: "var(--font-display)" }}>
               Platform Activity (30 days)
             </h3>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: "oklch(0.68 0.22 45)" }} />Questions</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: "oklch(0.76 0.19 60)" }} />Uploads</span>
+              <span className="flex items-center gap-1">
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: "oklch(0.68 0.22 45)" }}
+                />
+                Questions
+              </span>
+              <span className="flex items-center gap-1">
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: "oklch(0.76 0.19 60)" }}
+                />
+                Uploads
+              </span>
             </div>
           </div>
           {activity.length > 0 ? (
@@ -174,19 +221,40 @@ function AdminDashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} axisLine={false}
-                       tickFormatter={(v) => v.slice(5)} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10 }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => v.slice(5)}
+                />
                 <YAxis tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
                 <Tooltip
                   contentStyle={{
-                    background: "var(--card)", border: "1px solid var(--border)",
-                    borderRadius: "12px", fontSize: "12px",
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "12px",
+                    fontSize: "12px",
                   }}
                 />
-                <Area type="monotone" dataKey="questions" stroke="oklch(0.68 0.22 45)"
-                      fill="url(#qGrad)" strokeWidth={2} dot={false} name="Questions" />
-                <Area type="monotone" dataKey="uploads" stroke="oklch(0.76 0.19 60)"
-                      fill="url(#uGrad)" strokeWidth={2} dot={false} name="Uploads" />
+                <Area
+                  type="monotone"
+                  dataKey="questions"
+                  stroke="oklch(0.68 0.22 45)"
+                  fill="url(#qGrad)"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Questions"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="uploads"
+                  stroke="oklch(0.76 0.19 60)"
+                  fill="url(#uGrad)"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Uploads"
+                />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
@@ -201,8 +269,16 @@ function AdminDashboard() {
           <SystemHealth items={healthItems} />
 
           {/* Quick links */}
-          <div className="rounded-2xl border border-border p-4" style={{ background: "var(--card)" }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ fontFamily: "var(--font-display)" }}>Quick Actions</h3>
+          <div
+            className="rounded-2xl border border-border p-4"
+            style={{ background: "var(--card)" }}
+          >
+            <h3
+              className="text-sm font-semibold mb-3"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Quick Actions
+            </h3>
             <div className="space-y-2">
               {[
                 { href: "/admin/users", label: "Manage Users", icon: Users },
@@ -210,8 +286,11 @@ function AdminDashboard() {
                 { href: "/admin/analytics", label: "Full Analytics", icon: BarChart3 },
                 { href: "/admin/logs", label: "System Logs", icon: MessageSquare },
               ].map(({ href, label, icon: Icon }) => (
-                <a key={href} href={href}
-                   className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors">
+                <a
+                  key={href}
+                  href={href}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-accent transition-colors"
+                >
                   <Icon className="h-4 w-4 text-muted-foreground" />
                   {label}
                 </a>

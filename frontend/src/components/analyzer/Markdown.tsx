@@ -5,7 +5,7 @@ import { toast } from "sonner";
 /** Clean Markdown renderer for ChatGPT-inspired aesthetic with full Light/Dark theme support. */
 function renderInline(text: string, keyPrefix: string) {
   // If line begins with a single stray backtick without closing, clean it
-  let processed = text;
+  const processed = text;
   if (processed.startsWith("`") && !processed.slice(1).includes("`")) {
     return (
       <code
@@ -104,13 +104,7 @@ export function Markdown({ content }: { content: string }) {
           const maybeLang = rawLang ?? "";
           const isLang = /^[a-z0-9#+.-]+$/i.test(maybeLang.trim());
           const code = (isLang ? rest.join("\n") : block.replace(/^\n/, "")).replace(/\n$/, "");
-          return (
-            <CodeBlock
-              key={blockIndex}
-              lang={isLang ? maybeLang.trim() : ""}
-              code={code}
-            />
-          );
+          return <CodeBlock key={blockIndex} lang={isLang ? maybeLang.trim() : ""} code={code} />;
         }
 
         const lines = block.split("\n");
@@ -122,19 +116,17 @@ export function Markdown({ content }: { content: string }) {
               if (!trimmed) return null;
 
               // Horizontal Divider
-              if (/^(\-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
-                return (
-                  <div
-                    key={key}
-                    className="my-3 h-px w-full bg-border"
-                  />
-                );
+              if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+                return <div key={key} className="my-3 h-px w-full bg-border" />;
               }
 
               // Headings
               if (trimmed.startsWith("#### ")) {
                 return (
-                  <h5 key={key} className="pt-2 text-xs font-semibold uppercase tracking-wider text-primary">
+                  <h5
+                    key={key}
+                    className="pt-2 text-xs font-semibold uppercase tracking-wider text-primary"
+                  >
                     {renderInline(trimmed.slice(5), key)}
                   </h5>
                 );
@@ -181,17 +173,25 @@ export function Markdown({ content }: { content: string }) {
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-[10.5px] font-mono font-medium text-foreground">
                       {ordered[1]}
                     </span>
-                    <div className="flex-1 pt-0.5 text-foreground">{renderInline(ordered[2] ?? "", key)}</div>
+                    <div className="flex-1 pt-0.5 text-foreground">
+                      {renderInline(ordered[2] ?? "", key)}
+                    </div>
                   </div>
                 );
               }
 
               // Bullet lists
-              if (trimmed.startsWith("- ") || trimmed.startsWith("* ") || trimmed.startsWith("+ ")) {
+              if (
+                trimmed.startsWith("- ") ||
+                trimmed.startsWith("* ") ||
+                trimmed.startsWith("+ ")
+              ) {
                 return (
                   <div key={key} className="flex items-start gap-2.5 pl-1 my-1">
                     <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/70" />
-                    <div className="flex-1 text-foreground">{renderInline(trimmed.slice(2), key)}</div>
+                    <div className="flex-1 text-foreground">
+                      {renderInline(trimmed.slice(2), key)}
+                    </div>
                   </div>
                 );
               }

@@ -31,7 +31,7 @@ import logging
 import os
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ def _build_settings():
 
     # Pick the best available LLM (prioritizing Gemini Flash for speed & accuracy)
     if gemini_key:
-        llm_name = "gemini/gemini-flash-lite-latest"
+        llm_name = "gemini/gemini-3.6-flash"
         os.environ["GEMINI_API_KEY"] = gemini_key
         os.environ["GOOGLE_API_KEY"] = gemini_key  # litellm also reads GOOGLE_API_KEY
         logger.info("PaperQA connector: using Gemini (model=%s)", llm_name)

@@ -81,11 +81,7 @@ export function Navbar({
         </button>
 
         {/* Source count pill */}
-        <button
-          onClick={onOpenSearchPad}
-          title="View loaded sources"
-          className="inline-flex"
-        >
+        <button onClick={onOpenSearchPad} title="View loaded sources" className="inline-flex">
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-1 text-xs font-normal text-foreground hover:bg-muted transition-colors cursor-pointer">
             <Sparkles className="h-3 w-3 text-primary" />
             <span>{docCount}</span>

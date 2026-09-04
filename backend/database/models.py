@@ -81,31 +81,36 @@ async def save_document(doc: UploadedDoc) -> UploadedDoc:
     if sessionmaker is not None:
         async with sessionmaker() as session:
             db_doc = await session.get(UploadedDocDB, doc.id)
+            original_name = getattr(doc, "original_name", doc.name)
+            file_type = getattr(doc, "file_type", getattr(doc, "kind", "pdf"))
+            page_count = getattr(doc, "page_count", getattr(doc, "pages", 1))
+            preview = getattr(doc, "extracted_text_preview", "")
+            meta = getattr(doc, "metadata", {})
             if db_doc is None:
                 db_doc = UploadedDocDB(
                     id=doc.id,
                     user_id=doc.user_id,
                     name=doc.name,
-                    original_name=doc.original_name,
+                    original_name=original_name,
                     file_path=doc.file_path,
-                    file_type=doc.file_type,
+                    file_type=file_type,
                     size_mb=doc.size_mb,
-                    page_count=doc.page_count,
+                    page_count=page_count,
                     chunk_count=doc.chunk_count,
-                    extracted_text_preview=doc.extracted_text_preview,
-                    metadata_json=doc.metadata,
+                    extracted_text_preview=preview,
+                    metadata_json=meta,
                 )
                 session.add(db_doc)
             else:
                 db_doc.name = doc.name
-                db_doc.original_name = doc.original_name
+                db_doc.original_name = original_name
                 db_doc.file_path = doc.file_path
-                db_doc.file_type = doc.file_type
+                db_doc.file_type = file_type
                 db_doc.size_mb = doc.size_mb
-                db_doc.page_count = doc.page_count
+                db_doc.page_count = page_count
                 db_doc.chunk_count = doc.chunk_count
-                db_doc.extracted_text_preview = doc.extracted_text_preview
-                db_doc.metadata_json = doc.metadata
+                db_doc.extracted_text_preview = preview
+                db_doc.metadata_json = meta
             await session.commit()
     else:
         _mem_docs[doc.id] = doc
@@ -117,15 +122,12 @@ def _doc_db_to_pydantic(item: UploadedDocDB) -> UploadedDoc:
         id=item.id,
         user_id=item.user_id,
         name=item.name,
-        original_name=item.original_name,
-        file_path=item.file_path,
-        file_type=item.file_type,
-        size_mb=item.size_mb,
-        page_count=item.page_count,
-        chunk_count=item.chunk_count,
+        kind=item.file_type or "pdf",
+        size_mb=item.size_mb or 0.0,
+        pages=item.page_count or 1,
+        chunk_count=item.chunk_count or 0,
+        file_path=item.file_path or "",
         uploaded_at=item.uploaded_at if isinstance(item.uploaded_at, datetime) else datetime.now(timezone.utc),
-        extracted_text_preview=item.extracted_text_preview or "",
-        metadata=item.metadata_json or {},
     )
 
 
@@ -236,10 +238,9 @@ def _msg_db_to_pydantic(item: ChatMessageDB) -> ChatMessage:
         role=item.role,
         content=item.content,
         created_at=item.created_at if isinstance(item.created_at, datetime) else datetime.now(timezone.utc),
-        model=item.model or "",
-        confidence_score=item.confidence_score,
+        confidence=item.confidence_score,
         citations=citations,
-        doc_references=item.doc_references_json or [],
+        references="",
     )
 
 
@@ -249,17 +250,23 @@ async def save_message(msg: ChatMessage) -> ChatMessage:
     if sessionmaker is not None:
         async with sessionmaker() as session:
             citations_raw = [c.model_dump() if hasattr(c, "model_dump") else c for c in (msg.citations or [])]
+            msg_created = msg.created_at
+            if isinstance(msg_created, str):
+                try:
+                    msg_created = datetime.fromisoformat(msg_created)
+                except Exception:
+                    msg_created = datetime.now(timezone.utc)
             db_msg = ChatMessageDB(
                 id=msg.id,
                 session_id=msg.session_id,
                 user_id=msg.user_id,
                 role=msg.role,
                 content=msg.content,
-                created_at=msg.created_at,
-                model=msg.model,
-                confidence_score=msg.confidence_score,
+                created_at=msg_created,
+                model=getattr(msg, "model", ""),
+                confidence_score=getattr(msg, "confidence", getattr(msg, "confidence_score", None)),
                 citations_json=citations_raw,
-                doc_references_json=msg.doc_references,
+                doc_references_json=getattr(msg, "doc_references", []),
             )
             session.add(db_msg)
 

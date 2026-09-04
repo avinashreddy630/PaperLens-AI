@@ -16,9 +16,7 @@ export function CitationCard({ citation }: { citation: Citation }) {
           <div className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
             <FileText className="h-3.5 w-3.5" />
           </div>
-          <span className="truncate text-xs font-semibold text-foreground">
-            {citation.source}
-          </span>
+          <span className="truncate text-xs font-semibold text-foreground">{citation.source}</span>
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
@@ -30,7 +28,11 @@ export function CitationCard({ citation }: { citation: Citation }) {
             className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
             title={expanded ? "Collapse snippet" : "Expand snippet"}
           >
-            {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            {expanded ? (
+              <ChevronUp className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5" />
+            )}
           </button>
         </div>
       </div>

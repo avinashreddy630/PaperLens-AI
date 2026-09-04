@@ -170,7 +170,7 @@ async def admin_list_documents(
     search: Optional[str] = None,
 ):
     """List all documents across all users."""
-    all_docs = await get_documents()
+    all_docs = await get_documents(all_users=True)
     if search:
         all_docs = [d for d in all_docs if search.lower() in d.name.lower()]
     total = len(all_docs)

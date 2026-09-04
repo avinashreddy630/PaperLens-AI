@@ -34,9 +34,12 @@ def _get_candidate_models() -> list[str]:
         os.environ.setdefault("GEMINI_API_KEY", key)
         os.environ.setdefault("GOOGLE_API_KEY", key)
         models.extend([
-            "gemini/gemini-flash-lite-latest",
+            "gemini/gemini-3.6-flash",
             "gemini/gemini-3.5-flash",
+            "gemini/gemini-flash-latest",
             "gemini/gemini-3.7-flash",
+            "gemini/gemini-3.5-flash-lite",
+            "gemini/gemini-flash-lite-latest",
         ])
     if os.getenv("OPENAI_API_KEY", ""):
         models.extend(["gpt-4o-mini", "gpt-4o"])
@@ -51,18 +54,13 @@ def _get_candidate_models() -> list[str]:
     if os.getenv("ANTHROPIC_API_KEY", ""):
         models.extend(["claude-3-5-haiku-20241022"])
 
-    if models:
-        return models
-
-    raise RuntimeError(
-        "No LLM API key found. Set OPENAI_API_KEY, GEMINI_API_KEY, NVIDIA_API_KEY, or "
-        "ANTHROPIC_API_KEY in your backend/.env file."
-    )
+    return models
 
 
 def _pick_llm() -> str:
     """Return primary model name."""
-    return _get_candidate_models()[0]
+    candidates = _get_candidate_models()
+    return candidates[0] if candidates else "none"
 
 
 async def general_chat(
@@ -129,6 +127,23 @@ async def general_chat(
     messages.append({"role": "user", "content": question})
 
     candidate_models = _get_candidate_models()
+    if not candidate_models:
+        return {
+            "answer": (
+                "⚠️ **No AI Model API Key Configured**\n\n"
+                "To generate AI answers and analyze your question papers, please configure an API key for **Google Gemini**, **OpenAI**, **Anthropic**, or **NVIDIA**.\n\n"
+                "### How to set up:\n"
+                "1. **Option 1 (Fastest):** Open **User Settings (⚙️) → AI Model Keys** in the sidebar/navbar and enter your key.\n"
+                "2. **Option 2 (.env file):** Add `GEMINI_API_KEY=your_key_here` to `backend/.env`.\n\n"
+                "*(You can get a free Gemini API key at [Google AI Studio](https://aistudio.google.com/app/apikey))*"
+            ),
+            "sources": [],
+            "confidence": None,
+            "references": "",
+            "cost": 0.0,
+            "status": "warning",
+        }
+
     last_error: Exception | None = None
 
     for model in candidate_models:
@@ -170,8 +185,8 @@ async def general_chat(
     logger.error("general_chat all models failed: %s", last_error)
     return {
         "answer": (
-            f"I encountered an error while answering: {last_error}\n\n"
-            "Please verify your API key is valid and try again."
+            f"I encountered an issue connecting to the AI provider: `{last_error}`\n\n"
+            "Please check your API key in **Settings (⚙️)** and ensure it is active with quota remaining."
         ),
         "sources": [],
         "confidence": None,
@@ -203,6 +218,9 @@ async def is_question_relevant_to_docs(
         return True
 
     candidate_models = _get_candidate_models()
+    if not candidate_models:
+        return True
+
     doc_list = "\n".join(f"- {name}" for name in doc_names[:20])
 
     recent_context = ""
@@ -287,6 +305,9 @@ async def contextualize_query(
         return question
 
     candidate_models = _get_candidate_models()
+    if not candidate_models:
+        return question
+
     recent_turns = chat_history[-4:]
     history_text = "\n".join(
         f"{m.get('role', 'user').capitalize()}: {str(m.get('content', ''))[:200]}"
