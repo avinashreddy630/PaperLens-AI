@@ -12,6 +12,7 @@ import { ChatComposer } from "@/components/analyzer/ChatComposer";
 import { AnalyzerPanel } from "@/components/analyzer/AnalyzerPanel";
 import { UploadCard, ImagePreviewCard } from "@/components/analyzer/UploadCard";
 import { UploadDropzone } from "@/components/analyzer/UploadDropzone";
+import { EmptyState } from "@/components/analyzer/EmptyState";
 import {
   kindFromName,
   sampleAnswer,
@@ -22,7 +23,7 @@ import {
 } from "@/lib/analyzer";
 import { useAuth } from "@/lib/auth";
 import { chatApi, documentsApi, sessionsApi, type SessionResponse } from "@/lib/api";
-import { BrainCircuit, FileText, Sparkles, Search, Loader2 } from "lucide-react";
+import { BrainCircuit, FileText, Sparkles, Search, Loader2, ArrowRight, Layers, Flame, BookOpen, Calculator } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -79,6 +80,17 @@ const SUGGESTED_PROMPTS = [
     badgeColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
   },
 ];
+
+function formatCleanTitle(text: string, maxLen = 48): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= maxLen) return clean;
+  const sliced = clean.slice(0, maxLen);
+  const lastSpace = sliced.lastIndexOf(" ");
+  if (lastSpace > 16) {
+    return sliced.slice(0, lastSpace).trim() + "…";
+  }
+  return sliced.trim() + "…";
+}
 
 function getStoredSessions(): SessionResponse[] {
   if (typeof window === "undefined") return [];
@@ -167,17 +179,21 @@ function AnalyzerPage() {
     loadDocs();
   }, [isAuthenticated]);
 
-  // Fetch real chat sessions from backend
+  // Fetch real chat sessions from backend (or hydrate from localStorage for guest mode)
   const loadSessions = useCallback(async () => {
-    if (!isAuthenticated) return;
-    try {
-      const res = await sessionsApi.list();
-      if (res.data) {
-        setSessions(res.data);
-        persistSessions(res.data);
+    if (isAuthenticated) {
+      try {
+        const res = await sessionsApi.list();
+        if (res.data) {
+          setSessions(res.data);
+          persistSessions(res.data);
+        }
+      } catch (err) {
+        console.warn("Could not load chat sessions:", err);
       }
-    } catch (err) {
-      console.warn("Could not load chat sessions:", err);
+    } else {
+      const stored = getStoredSessions();
+      setSessions(stored);
     }
   }, [isAuthenticated]);
 
@@ -211,6 +227,9 @@ function AnalyzerPage() {
 
   const imageDocs = useMemo(() => docs.filter((doc) => doc.kind === "image"), [docs]);
   const fileDocs = useMemo(() => docs.filter((doc) => doc.kind !== "image"), [docs]);
+  const totalEstimatedPages = useMemo(() => {
+    return docs.reduce((acc, d) => acc + (d.pages || 1), 0);
+  }, [docs]);
 
   // Convert SessionResponse to SidebarChat (preserving all attributes)
   const sidebarChats = useMemo<SidebarChat[]>(() => {
@@ -372,6 +391,9 @@ function AnalyzerPage() {
         setMessages([]);
         setActiveChat(null);
       }
+      try {
+        localStorage.removeItem(`paperlens_msgs_${sessionId}`);
+      } catch {}
       if (isAuthenticated) {
         try {
           await sessionsApi.delete(sessionId);
@@ -406,6 +428,24 @@ function AnalyzerPage() {
       } catch (err) {
         toast.error("Failed to load chat history");
       }
+    } else {
+      // Guest mode: load stored messages from localStorage
+      try {
+        const raw = localStorage.getItem(`paperlens_msgs_${sessionId}`);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            setMessages(
+              parsed.map((m: any) => ({
+                ...m,
+                createdAt: new Date(m.createdAt || m.created_at || Date.now()),
+              })),
+            );
+            return;
+          }
+        }
+      } catch {}
+      setMessages([]);
     }
   }
 
@@ -569,71 +609,124 @@ function AnalyzerPage() {
   async function sendMessage(text: string) {
     if (!text.trim() || loading) return;
     const cleanText = text.trim();
-    const isFirstQuestion = messages.length === 0;
+    const isNewChat = !activeChat;
+    const sessionId = activeChat || crypto.randomUUID();
+    const sessionTitle = formatCleanTitle(cleanText);
 
-    setMessages((current) => [
-      ...current,
-      { id: `u-${Date.now()}`, role: "user", content: cleanText, createdAt: new Date() },
-    ]);
+    if (isNewChat) {
+      setActiveChat(sessionId);
+    }
+
+    const nowIso = new Date().toISOString();
+    const userMsg: ChatMessageData = {
+      id: `u-${Date.now()}`,
+      role: "user",
+      content: cleanText,
+      createdAt: new Date(),
+    };
+
+    setMessages((current) => [...current, userMsg]);
     setInput("");
     setLoading(true);
 
+    // OPTIMISTIC SESSION UPDATE: Chat appears immediately in Recent Chats without waiting for LLM
+    setSessions((prev) => {
+      const existingIdx = prev.findIndex((s) => s.id === sessionId);
+      let updatedList: SessionResponse[];
+      if (existingIdx >= 0) {
+        const existing = prev[existingIdx];
+        const updatedItem: SessionResponse = {
+          ...existing,
+          title: existing.title === "New Chat" ? sessionTitle : existing.title,
+          message_count: (existing.message_count || 0) + 1,
+          updated_at: nowIso,
+        };
+        updatedList = [updatedItem, ...prev.filter((_, idx) => idx !== existingIdx)];
+      } else {
+        const newItem: SessionResponse = {
+          id: sessionId,
+          user_id: user?.id || "guest",
+          title: sessionTitle || "New Chat",
+          pinned: false,
+          archived: false,
+          favorite: false,
+          folder: null,
+          message_count: 1,
+          created_at: nowIso,
+          updated_at: nowIso,
+        };
+        updatedList = [newItem, ...prev];
+      }
+      persistSessions(updatedList);
+      return updatedList;
+    });
+
     if (isAuthenticated) {
       try {
-        const sessionId = activeChat ?? undefined;
         const res = await chatApi.send(cleanText, sessionId);
         const d = res.data;
 
-        if (d.session_id && !activeChat) {
-          setActiveChat(d.session_id);
-          // Auto-generate clean session title from first question
-          const autoTitle = cleanText.length > 38 ? cleanText.slice(0, 38).trim() + "…" : cleanText;
-          void sessionsApi.update(d.session_id, { title: autoTitle }).catch(() => {});
-        }
+        const assistantMsg: ChatMessageData = {
+          id: `a-${Date.now()}`,
+          role: "assistant",
+          content: d.answer,
+          createdAt: new Date(),
+          confidence: d.confidence ?? undefined,
+          status: d.status,
+          // Preserve all citation fields including id and relevance
+          citations: d.citations.map((c) => ({
+            id: c.id,
+            source: c.source,
+            page: c.page,
+            snippet: c.snippet,
+            relevance: c.relevance,
+          })),
+        };
 
-        setMessages((current) => [
-          ...current,
-          {
-            id: `a-${Date.now()}`,
-            role: "assistant",
-            content: d.answer,
-            createdAt: new Date(),
-            confidence: d.confidence ?? undefined,
-            status: d.status,
-            // Preserve all citation fields including id and relevance
-            citations: d.citations.map((c) => ({
-              id: c.id,
-              source: c.source,
-              page: c.page,
-              snippet: c.snippet,
-              relevance: c.relevance,
-            })),
-          },
-        ]);
+        setMessages((current) => {
+          const updated = [...current, assistantMsg];
+          return updated;
+        });
 
-        // Refresh sessions list after sending so new sessions appear in sidebar
-        loadSessions();
+        // Sync with server sessions
+        await loadSessions();
       } catch (err: unknown) {
         toast.error(err instanceof Error ? err.message : "Failed to get answer");
       } finally {
         setLoading(false);
       }
     } else {
-      // Guest / demo mode — use sample answer
+      // Guest / demo mode — use sample answer and persist locally
       window.setTimeout(() => {
-        setMessages((current) => [
-          ...current,
-          {
-            id: `a-${Date.now()}`,
-            role: "assistant",
-            content: sampleAnswer,
-            createdAt: new Date(),
-            confidence: 0.89,
-            citations: sampleCitations,
-          },
-        ]);
+        const assistantMsg: ChatMessageData = {
+          id: `a-${Date.now()}`,
+          role: "assistant",
+          content: sampleAnswer,
+          createdAt: new Date(),
+          confidence: 0.89,
+          citations: sampleCitations,
+        };
+
+        setMessages((current) => {
+          const updated = [...current, assistantMsg];
+          try {
+            localStorage.setItem(`paperlens_msgs_${sessionId}`, JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+
+        setSessions((prev) => {
+          const updatedList = prev.map((s) =>
+            s.id === sessionId
+              ? { ...s, message_count: (s.message_count || 0) + 1, updated_at: new Date().toISOString() }
+              : s,
+          );
+          persistSessions(updatedList);
+          return updatedList;
+        });
+
         setLoading(false);
-      }, 1600);
+      }, 1200);
     }
   }
 
@@ -690,6 +783,11 @@ function AnalyzerPage() {
         onToggleArchiveChat={handleToggleArchiveChat}
         onAssignFolder={handleAssignFolder}
         onDeleteChat={handleDeleteChat}
+        onSelectPrompt={(p) => {
+          setInput(p);
+          setTimeout(() => sendMessage(p), 50);
+        }}
+        onOpenSearchPad={() => setSearchPadOpen(true)}
       />
 
       {/* ── Main content column ── */}
@@ -707,120 +805,173 @@ function AnalyzerPage() {
           hasMessages={hasMessages}
         />
 
-        {/* ── Scrollable chat area ── */}
+        {/* ── Scrollable chat & document workspace area ── */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
-          {/* ── Empty / Welcome state — Minimalist AI Workspace (ChatGPT Style) ── */}
-          {!hasMessages && !loading && (
-            <div className="flex h-full flex-col items-center justify-center px-4 py-8 text-center">
-              {/* Brand Logo */}
-              <div className="mb-4">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl border border-primary/30 bg-primary/10 text-primary shadow-xs">
-                  <BrainCircuit className="h-6 w-6" />
+          {/* ── 1. Empty / Welcome state (0 documents loaded) ── */}
+          {!hasMessages && !loading && docs.length === 0 && (
+            <EmptyState
+              onFiles={addFiles}
+              onSelectPrompt={(p) => {
+                setInput(p);
+                setTimeout(() => sendMessage(p), 50);
+              }}
+            />
+          )}
+
+          {/* ── 2. Document Intelligence Workspace (Post-Upload Dashboard) ── */}
+          {!hasMessages && !loading && docs.length > 0 && (
+            <div className="mx-auto w-full max-w-4xl px-4 py-8 space-y-6">
+              {/* Hero & Metrics Banner */}
+              <div className="rounded-2xl border border-border/80 bg-card/60 p-5 backdrop-blur-md shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="grid h-6 w-6 place-items-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
+                        <BrainCircuit className="h-3.5 w-3.5" />
+                      </span>
+                      <h2 className="text-base font-semibold text-foreground">
+                        Document Intelligence Workspace
+                      </h2>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {docs.length} document{docs.length === 1 ? "" : "s"} indexed with full-text search, OCR, and AI citations.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-muted/40 px-3 py-1.5 text-xs text-foreground font-medium">
+                      <Layers className="h-3.5 w-3.5 text-primary" />
+                      <span>{totalEstimatedPages} Pages Total</span>
+                    </div>
+                    <button
+                      onClick={() => setSearchPadOpen(true)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                      <span>Search Pad ⌘K</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Suggested Analysis Prompts for Uploaded Papers */}
+                <div className="mt-4 pt-4 border-t border-border/60">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Quick Question Paper Analysis
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        const p = "Which topics and questions repeat most frequently across all uploaded papers? List the top recurring questions with years.";
+                        setInput(p);
+                        setTimeout(() => sendMessage(p), 50);
+                      }}
+                      className="group flex items-center justify-between rounded-xl border border-border/70 bg-background/50 p-2.5 text-left text-xs text-foreground hover:border-primary/40 hover:bg-card transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🔥</span>
+                        <span className="font-medium group-hover:text-primary transition-colors">Find Repeated Questions</span>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-0.5" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const p = "What are the most critical and high-weightage questions to prepare for the exam?";
+                        setInput(p);
+                        setTimeout(() => sendMessage(p), 50);
+                      }}
+                      className="group flex items-center justify-between rounded-xl border border-border/70 bg-background/50 p-2.5 text-left text-xs text-foreground hover:border-primary/40 hover:bg-card transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">⭐</span>
+                        <span className="font-medium group-hover:text-primary transition-colors">Important Questions</span>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-0.5" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const p = "Generate 5 high-yield exam practice questions with hints and marking schemes based on the uploaded materials.";
+                        setInput(p);
+                        setTimeout(() => sendMessage(p), 50);
+                      }}
+                      className="group flex items-center justify-between rounded-xl border border-border/70 bg-background/50 p-2.5 text-left text-xs text-foreground hover:border-primary/40 hover:bg-card transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">📝</span>
+                        <span className="font-medium group-hover:text-primary transition-colors">Generate Practice Questions</span>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-0.5" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const p = "Summarize all key formulas, definitions, and core concepts into a fast revision cheat sheet.";
+                        setInput(p);
+                        setTimeout(() => sendMessage(p), 50);
+                      }}
+                      className="group flex items-center justify-between rounded-xl border border-border/70 bg-background/50 p-2.5 text-left text-xs text-foreground hover:border-primary/40 hover:bg-card transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🗂</span>
+                        <span className="font-medium group-hover:text-primary transition-colors">Create Revision Sheet</span>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-0.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl text-foreground">
-                What would you like to solve or analyze?
-              </h1>
-              <p className="mx-auto mt-2 max-w-md text-xs sm:text-sm leading-relaxed text-muted-foreground">
-                Upload question papers, textbooks, and notes. Ask questions to get cited answers,
-                repeated exam topics, and step-by-step problem solutions.
-              </p>
-
-              {/* Categorized prompt cards */}
-              <div className="mt-6 grid w-full max-w-2xl gap-2.5 sm:grid-cols-2 text-left">
-                {SUGGESTED_PROMPTS.map((item) => (
-                  <button
-                    key={item.title}
-                    onClick={() => {
-                      setInput(item.prompt);
-                      setTimeout(() => sendMessage(item.prompt), 50);
-                    }}
-                    className="group flex flex-col justify-between rounded-xl border border-border bg-card/80 p-3.5 hover:border-primary/40 hover:bg-card transition-colors cursor-pointer"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-base">{item.icon}</span>
-                        <span
-                          className={`rounded-md px-1.5 py-0.5 text-[10px] font-medium border ${item.badgeColor}`}
-                        >
-                          {item.category}
-                        </span>
-                      </div>
-                      <h3 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {item.title}
-                      </h3>
-                      <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
-                        {item.prompt}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Document count badge */}
-              {docs.length > 0 && (
-                <button
-                  onClick={() => setSearchPadOpen(true)}
-                  className="mt-5 inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground hover:border-border/80 hover:text-foreground transition-colors cursor-pointer"
-                >
-                  <FileText className="h-3.5 w-3.5 text-primary" />
-                  <span>
-                    {docs.length} document{docs.length !== 1 ? "s" : ""} indexed
-                  </span>
-                  <span className="text-muted-foreground/60">·</span>
-                  <span className="text-primary font-medium">Search Pad ⌘K</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* ── Chat messages ── */}
-          {(hasMessages || loading) && (
-            <div className="mx-auto w-full max-w-3xl space-y-6 px-1 py-6 sm:px-2">
-              {messages.map((message, idx) => (
-                <ChatMessage
-                  key={message.id}
-                  message={message}
-                  onRegenerate={handleRegenerate}
-                  onSelectPrompt={(prompt) => sendMessage(prompt)}
-                  isLatest={idx === messages.length - 1}
-                />
-              ))}
-              {loading && <TypingIndicator />}
-            </div>
-          )}
-
-          {/* ── Documents panel (shown when docs exist and no messages yet) ── */}
-          {!hasMessages && !loading && docs.length > 0 && (
-            <div className="mx-auto w-full max-w-3xl px-4 pb-6">
+              {/* Documents Tabs & Explorer */}
               <Tabs defaultValue="documents">
                 <TabsList className="w-full">
                   <TabsTrigger value="documents" className="flex-1">
-                    Documents ({fileDocs.length})
+                    Papers & Documents ({fileDocs.length})
                   </TabsTrigger>
                   <TabsTrigger value="images" className="flex-1">
-                    Images ({imageDocs.length})
+                    Scanned OCR Images ({imageDocs.length})
                   </TabsTrigger>
                   <TabsTrigger value="upload" className="flex-1">
-                    Add files
+                    Upload More Files
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="documents" className="mt-3 grid gap-2 sm:grid-cols-2">
+                <TabsContent value="documents" className="mt-3 grid gap-3 sm:grid-cols-2">
                   {fileDocs.map((doc) => (
-                    <UploadCard key={doc.id} doc={doc} onDelete={() => removeDoc(doc.id)} />
+                    <UploadCard
+                      key={doc.id}
+                      doc={doc}
+                      onDelete={() => removeDoc(doc.id)}
+                      onAnalyze={(name) => {
+                        const prompt = `Analyze question paper structure, topics, and recurring themes in ${name}`;
+                        setInput(prompt);
+                        setTimeout(() => sendMessage(prompt), 50);
+                      }}
+                      onAsk={(docName) => {
+                        const prompt = `What are the key questions, topics, and formulas discussed in ${docName}?`;
+                        setInput(prompt);
+                        setTimeout(() => sendMessage(prompt), 50);
+                      }}
+                    />
                   ))}
                   {fileDocs.length === 0 && (
-                    <p className="text-xs text-muted-foreground">No documents yet.</p>
+                    <p className="text-xs text-muted-foreground py-6 text-center sm:col-span-2">No documents yet. Add your PDFs or DOCX files.</p>
                   )}
                 </TabsContent>
-                <TabsContent value="images" className="mt-3 grid gap-2 sm:grid-cols-3">
+                <TabsContent value="images" className="mt-3 grid gap-3 sm:grid-cols-3">
                   {imageDocs.map((doc) => (
-                    <ImagePreviewCard key={doc.id} doc={doc} onDelete={() => removeDoc(doc.id)} />
+                    <ImagePreviewCard
+                      key={doc.id}
+                      doc={doc}
+                      onDelete={() => removeDoc(doc.id)}
+                      onAsk={(prompt) => {
+                        setInput(prompt);
+                        setTimeout(() => sendMessage(prompt), 50);
+                      }}
+                    />
                   ))}
                   {imageDocs.length === 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Upload a photo of a handwritten or printed paper.
+                    <p className="text-xs text-muted-foreground py-6 text-center sm:col-span-3">
+                      No scanned images yet. Upload photos of handwritten or printed papers.
                     </p>
                   )}
                 </TabsContent>
@@ -828,6 +979,25 @@ function AnalyzerPage() {
                   <UploadDropzone onFiles={addFiles} compact />
                 </TabsContent>
               </Tabs>
+            </div>
+          )}
+
+          {/* ── 3. Active Chat Conversation ── */}
+          {(hasMessages || loading) && (
+            <div className="mx-auto w-full max-w-3xl space-y-6 px-1 py-6 sm:px-2">
+              {messages.map((message, idx) => (
+                <ChatMessage
+                  key={message.id}
+                  message={message}
+                  onRegenerate={handleRegenerate}
+                  onSelectPrompt={(prompt) => {
+                    setInput(prompt);
+                    setTimeout(() => sendMessage(prompt), 50);
+                  }}
+                  isLatest={idx === messages.length - 1}
+                />
+              ))}
+              {loading && <TypingIndicator />}
             </div>
           )}
 

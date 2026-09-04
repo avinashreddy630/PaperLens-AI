@@ -81,9 +81,36 @@ async def ask_question(
     from core.config import get_settings
 
     sid = session_id or str(uuid.uuid4())
+    sess_user_id = user_id or "anonymous"
+    clean_title = question.strip().replace("\n", " ")
+    if len(clean_title) > 48:
+        last_space = clean_title[:45].rfind(" ")
+        clean_title = (clean_title[:last_space] if last_space > 15 else clean_title[:42]).strip() + "…"
 
     # ------------------------------------------------------------------ #
-    # 0. Retrieve conversation history for multi-turn context memory
+    # 0a. Ensure ChatSession exists upfront so it appears in recent chats
+    # ------------------------------------------------------------------ #
+    try:
+        existing_sess = await models.get_session_by_id(sid, user_id=sess_user_id)
+        if not existing_sess:
+            new_sess = models.ChatSession(
+                id=sid,
+                user_id=sess_user_id,
+                title=clean_title or "New Chat",
+                message_count=1,
+            )
+            await models.create_session(new_sess)
+        elif existing_sess.title in ("New Chat", "", None):
+            await models.update_session(
+                sid,
+                {"title": clean_title or "New Chat"},
+                user_id=sess_user_id,
+            )
+    except Exception as sess_err:
+        logger.warning("Failed upfront chat session creation (non-fatal): %s", sess_err)
+
+    # ------------------------------------------------------------------ #
+    # 0b. Retrieve conversation history for multi-turn context memory
     # ------------------------------------------------------------------ #
     prior_messages = await models.get_history(session_id=sid, limit=16, user_id=user_id)
     chat_history: List[Dict[str, str]] = [
@@ -249,34 +276,27 @@ async def ask_question(
     # ------------------------------------------------------------------ #
     # 5b. Auto-create or update ChatSession so it appears in Recent Chats
     # ------------------------------------------------------------------ #
-    if user_id:
-        try:
-            from database import models
-            from datetime import datetime, timezone
-
-            existing_sess = await models.get_session_by_id(sid, user_id=user_id)
-            if not existing_sess:
-                clean_title = question.strip().replace("\n", " ")
-                if len(clean_title) > 40:
-                    clean_title = clean_title[:37] + "..."
-                new_sess = models.ChatSession(
-                    id=sid,
-                    user_id=user_id,
-                    title=clean_title or "New Chat",
-                    message_count=2,
-                )
-                await models.create_session(new_sess)
-            else:
-                await models.update_session(
-                    sid,
-                    {
-                        "message_count": (existing_sess.message_count or 0) + 2,
-                        "updated_at": datetime.now(timezone.utc).isoformat(),
-                    },
-                    user_id=user_id,
-                )
-        except Exception as sess_err:
-            logger.warning("Failed to upsert chat session record (non-fatal): %s", sess_err)
+    try:
+        existing_sess = await models.get_session_by_id(sid, user_id=sess_user_id)
+        if existing_sess:
+            await models.update_session(
+                sid,
+                {
+                    "message_count": max((existing_sess.message_count or 0), 2),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                },
+                user_id=sess_user_id,
+            )
+        else:
+            new_sess = models.ChatSession(
+                id=sid,
+                user_id=sess_user_id,
+                title=clean_title or "New Chat",
+                message_count=2,
+            )
+            await models.create_session(new_sess)
+    except Exception as sess_err:
+        logger.warning("Failed to upsert chat session record (non-fatal): %s", sess_err)
 
 
     # ------------------------------------------------------------------ #

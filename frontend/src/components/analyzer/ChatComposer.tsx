@@ -24,10 +24,10 @@ export function ChatComposer({
   const imageInput = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="border-t border-border/80 bg-background/90 px-3 pb-3 pt-2 backdrop-blur-md sm:px-5">
+    <div className="border-t border-border/60 bg-background/80 px-3 pb-3 pt-2 backdrop-blur-xl sm:px-5">
       <div className="mx-auto max-w-3xl">
-        {/* Floating Composer Capsule (ChatGPT Style) */}
-        <div className="relative rounded-2xl border border-border bg-card shadow-xs transition-all duration-200 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
+        {/* Floating Composer Capsule */}
+        <div className="relative rounded-2xl border border-border/80 bg-card/90 shadow-sm transition-all duration-200 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20 focus-within:shadow-md">
           {/* Hidden file inputs */}
           <input
             ref={docInput}
@@ -65,15 +65,15 @@ export function ChatComposer({
             }}
             rows={1}
             placeholder="Ask anything about your papers, formulas, or past exam questions..."
-            className="max-h-48 min-h-[48px] resize-none border-0 bg-transparent px-4 py-3 text-[15px] sm:text-[15.5px] leading-relaxed text-foreground shadow-none focus-visible:ring-0 placeholder:text-muted-foreground font-normal"
+            className="max-h-48 min-h-[50px] resize-none border-0 bg-transparent px-4 py-3 text-[14.5px] sm:text-[15px] leading-relaxed text-foreground shadow-none focus-visible:ring-0 placeholder:text-muted-foreground font-normal"
           />
 
           {/* Bottom Toolbar */}
-          <div className="flex items-center gap-1 px-3 pb-2 pt-0.5">
+          <div className="flex items-center gap-1.5 px-3 pb-2.5 pt-0.5">
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 gap-1.5 rounded-lg px-2 text-xs font-normal text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+              className="h-7.5 gap-1.5 rounded-lg px-2.5 text-xs font-normal text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
               onClick={() => docInput.current?.click()}
               title="Attach question papers or notes (PDF, DOCX, TXT)"
             >
@@ -84,7 +84,7 @@ export function ChatComposer({
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 gap-1.5 rounded-lg px-2 text-xs font-normal text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+              className="h-7.5 gap-1.5 rounded-lg px-2.5 text-xs font-normal text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
               onClick={() => imageInput.current?.click()}
               title="Upload question paper photo for instant OCR"
             >
@@ -99,7 +99,7 @@ export function ChatComposer({
                   size="icon"
                   aria-label="Stop generating"
                   onClick={onStop}
-                  className="h-7.5 w-7.5 shrink-0 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer"
+                  className="h-8 w-8 shrink-0 rounded-xl bg-foreground text-background hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
                 >
                   <Square className="h-3 w-3 fill-current" />
                 </Button>
@@ -109,9 +109,9 @@ export function ChatComposer({
                   aria-label="Send message"
                   disabled={!value.trim()}
                   onClick={onSend}
-                  className="h-7.5 w-7.5 shrink-0 rounded-lg bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-60 cursor-pointer"
+                  className="h-8 w-8 shrink-0 rounded-xl bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:bg-muted/70 disabled:text-muted-foreground/60 disabled:opacity-50 cursor-pointer shadow-sm shadow-indigo-500/20"
                 >
-                  <ArrowUp className="h-3.5 w-3.5" />
+                  <ArrowUp className="h-4 w-4" />
                 </Button>
               )}
             </div>
@@ -119,9 +119,8 @@ export function ChatComposer({
         </div>
 
         {/* Branded Footer Disclaimer */}
-        <p className="mt-2 text-center text-[11px] text-muted-foreground">
-          PaperLens AI can make mistakes. Verify critical exam formulas against original syllabus
-          papers.
+        <p className="mt-2 text-center text-[11px] text-muted-foreground/80">
+          PaperLens AI answers are strictly grounded in your materials with verified citations.
         </p>
       </div>
     </div>

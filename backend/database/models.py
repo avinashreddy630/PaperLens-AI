@@ -336,7 +336,7 @@ async def get_sessions(user_id: str) -> List[ChatSession]:
         async with sessionmaker() as session:
             stmt = (
                 select(ChatSessionDB)
-                .where(ChatSessionDB.user_id == user_id)
+                .where(or_(ChatSessionDB.user_id == user_id, ChatSessionDB.user_id == "anonymous" if user_id == "anonymous" else False))
                 .order_by(ChatSessionDB.pinned.desc(), ChatSessionDB.updated_at.desc())
             )
             res = await session.execute(stmt)
@@ -348,42 +348,66 @@ async def get_sessions(user_id: str) -> List[ChatSession]:
 
 
 async def get_session_by_id(session_id: str, user_id: Optional[str] = None) -> Optional[ChatSession]:
-    """Fetch a single chat session."""
+    """Fetch a single chat session with safe ownership check."""
     sessionmaker = get_async_sessionmaker()
     if sessionmaker is not None:
         async with sessionmaker() as session:
             stmt = select(ChatSessionDB).where(ChatSessionDB.id == session_id)
-            if user_id:
-                stmt = stmt.where(ChatSessionDB.user_id == user_id)
+            if user_id and user_id != "anonymous":
+                stmt = stmt.where(or_(ChatSessionDB.user_id == user_id, ChatSessionDB.user_id == "anonymous", ChatSessionDB.user_id.is_(None)))
             res = await session.execute(stmt)
             item = res.scalar_one_or_none()
             return _sess_db_to_pydantic(item) if item else None
     else:
         s = _mem_sessions.get(session_id)
-        if s and (user_id is None or s.user_id == user_id):
+        if s and (user_id is None or s.user_id == user_id or s.user_id == "anonymous"):
             return s
         return None
 
 
 async def create_session(session_obj: ChatSession) -> ChatSession:
-    """Create a new chat session."""
+    """Create or upsert a chat session."""
     sessionmaker = get_async_sessionmaker()
     if sessionmaker is not None:
         async with sessionmaker() as session:
-            db_sess = ChatSessionDB(
-                id=session_obj.id,
-                user_id=session_obj.user_id,
-                title=session_obj.title,
-                pinned=session_obj.pinned,
-                archived=session_obj.archived,
-                favorite=session_obj.favorite,
-                folder=session_obj.folder,
-                message_count=session_obj.message_count,
-            )
-            session.add(db_sess)
+            db_sess = await session.get(ChatSessionDB, session_obj.id)
+            if db_sess is None:
+                db_sess = ChatSessionDB(
+                    id=session_obj.id,
+                    user_id=session_obj.user_id,
+                    title=session_obj.title,
+                    pinned=session_obj.pinned,
+                    archived=session_obj.archived,
+                    favorite=session_obj.favorite,
+                    folder=session_obj.folder,
+                    message_count=session_obj.message_count,
+                )
+                session.add(db_sess)
+            else:
+                if session_obj.user_id and session_obj.user_id != "anonymous":
+                    db_sess.user_id = session_obj.user_id
+                db_sess.title = session_obj.title
+                db_sess.pinned = session_obj.pinned
+                db_sess.archived = session_obj.archived
+                db_sess.favorite = session_obj.favorite
+                db_sess.folder = session_obj.folder
+                db_sess.message_count = max(db_sess.message_count or 0, session_obj.message_count or 0)
+                db_sess.updated_at = datetime.now(timezone.utc)
             await session.commit()
     else:
-        _mem_sessions[session_obj.id] = session_obj
+        if session_obj.id in _mem_sessions:
+            existing = _mem_sessions[session_obj.id]
+            if session_obj.user_id and session_obj.user_id != "anonymous":
+                existing.user_id = session_obj.user_id
+            existing.title = session_obj.title
+            existing.pinned = session_obj.pinned
+            existing.archived = session_obj.archived
+            existing.favorite = session_obj.favorite
+            existing.folder = session_obj.folder
+            existing.message_count = max(existing.message_count or 0, session_obj.message_count or 0)
+            existing.updated_at = datetime.now(timezone.utc).isoformat()
+        else:
+            _mem_sessions[session_obj.id] = session_obj
     return session_obj
 
 
@@ -398,11 +422,13 @@ async def update_session(
     if sessionmaker is not None:
         async with sessionmaker() as session:
             stmt = select(ChatSessionDB).where(ChatSessionDB.id == session_id)
-            if user_id:
-                stmt = stmt.where(ChatSessionDB.user_id == user_id)
+            if user_id and user_id != "anonymous":
+                stmt = stmt.where(or_(ChatSessionDB.user_id == user_id, ChatSessionDB.user_id == "anonymous", ChatSessionDB.user_id.is_(None)))
             res = await session.execute(stmt)
             item = res.scalar_one_or_none()
             if item:
+                if user_id and user_id != "anonymous":
+                    item.user_id = user_id
                 for k, v in updates.items():
                     if hasattr(item, k):
                         setattr(item, k, v)
@@ -412,7 +438,9 @@ async def update_session(
     else:
         if session_id in _mem_sessions:
             s = _mem_sessions[session_id]
-            if user_id is None or s.user_id == user_id:
+            if user_id is None or s.user_id == user_id or s.user_id == "anonymous":
+                if user_id and user_id != "anonymous":
+                    s.user_id = user_id
                 for k, v in updates.items():
                     if hasattr(s, k):
                         setattr(s, k, v)
@@ -426,8 +454,8 @@ async def delete_session(session_id: str, user_id: Optional[str] = None) -> bool
     if sessionmaker is not None:
         async with sessionmaker() as session:
             stmt = select(ChatSessionDB).where(ChatSessionDB.id == session_id)
-            if user_id:
-                stmt = stmt.where(ChatSessionDB.user_id == user_id)
+            if user_id and user_id != "anonymous":
+                stmt = stmt.where(or_(ChatSessionDB.user_id == user_id, ChatSessionDB.user_id == "anonymous", ChatSessionDB.user_id.is_(None)))
             res = await session.execute(stmt)
             item = res.scalar_one_or_none()
             if item:
@@ -441,7 +469,7 @@ async def delete_session(session_id: str, user_id: Optional[str] = None) -> bool
     else:
         global _mem_messages
         if session_id in _mem_sessions:
-            if user_id is None or _mem_sessions[session_id].user_id == user_id:
+            if user_id is None or _mem_sessions[session_id].user_id == user_id or _mem_sessions[session_id].user_id == "anonymous":
                 del _mem_sessions[session_id]
                 _mem_messages = [m for m in _mem_messages if m.session_id != session_id]
                 return True

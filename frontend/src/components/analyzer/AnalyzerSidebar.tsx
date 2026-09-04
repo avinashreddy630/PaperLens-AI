@@ -27,6 +27,9 @@ import {
   SlidersHorizontal,
   FolderPlus,
   Sparkles,
+  Flame,
+  BookOpen,
+  FileCheck2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,6 +108,8 @@ interface SidebarProps {
   onToggleArchiveChat?: (id: string, archived: boolean) => void;
   onAssignFolder?: (id: string, folder: string | null) => void;
   onDeleteChat?: (id: string) => void;
+  onSelectPrompt?: (prompt: string) => void;
+  onOpenSearchPad?: () => void;
 }
 
 export function AnalyzerSidebar({
@@ -125,6 +130,8 @@ export function AnalyzerSidebar({
   onToggleArchiveChat,
   onAssignFolder,
   onDeleteChat,
+  onSelectPrompt,
+  onOpenSearchPad,
 }: SidebarProps) {
   const { user, isGuest, isAuthenticated } = useAuth();
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
@@ -266,7 +273,7 @@ export function AnalyzerSidebar({
       <aside
         className={cn(
           "z-30 flex h-full shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar backdrop-blur-xl transition-[width] duration-200 ease-out",
-          open ? "w-[270px]" : "w-0 md:w-[68px]",
+          open ? "w-[280px]" : "w-0 md:w-[68px]",
         )}
       >
         {/* Brand Header */}
@@ -493,9 +500,86 @@ export function AnalyzerSidebar({
           </div>
         )}
 
+        {/* Workspace Quick-Access Items */}
+        {open && (
+          <div className="mt-2.5 px-3">
+            <div className="px-1 mb-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+              Workspace
+            </div>
+            <div className="space-y-0.5">
+              <button
+                onClick={() => (onOpenSearchPad ? onOpenSearchPad() : onUpload())}
+                className="group flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+                title="View and search uploaded question papers & notes"
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <Layers className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                  <span className="font-medium truncate">My Papers</span>
+                </span>
+                <span className="rounded-md bg-muted px-1.5 py-0.2 text-[10px] font-mono text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 shrink-0">
+                  {docs.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() =>
+                  onSelectPrompt?.(
+                    "Which topics and questions repeat most frequently across all uploaded papers?",
+                  )
+                }
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+                title="Analyze repeating exam topics and question patterns"
+              >
+                <Flame className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                <span className="font-medium truncate">Repeated Topics</span>
+              </button>
+
+              <button
+                onClick={() =>
+                  onSelectPrompt?.(
+                    "What are the most critical and high-weightage questions to prepare for the exam?",
+                  )
+                }
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+                title="Find high-weightage and recurring questions"
+              >
+                <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400 shrink-0" />
+                <span className="font-medium truncate">Important Questions</span>
+              </button>
+
+              <button
+                onClick={() =>
+                  onSelectPrompt?.(
+                    "Generate 5 high-yield exam practice questions with hints and marking schemes based on the uploaded materials.",
+                  )
+                }
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+                title="Generate practice questions from syllabus"
+              >
+                <BrainCircuit className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+                <span className="font-medium truncate">Practice</span>
+              </button>
+
+              <button
+                onClick={() =>
+                  onSelectPrompt?.(
+                    "Summarize all key formulas, definitions, and core concepts into a fast revision guide.",
+                  )
+                }
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-foreground hover:bg-muted/70 transition-colors cursor-pointer"
+                title="Create comprehensive study cheat sheet"
+              >
+                <FileCheck2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                <span className="font-medium truncate">Revision Sheets</span>
+              </button>
+            </div>
+            <Separator className="mt-2 bg-sidebar-border" />
+          </div>
+        )}
+
         {/* Scrollable Chat List */}
-        <ScrollArea className="mt-2 flex-1 px-3">
-          <div className="space-y-4 pb-4">
+        <ScrollArea className="mt-2 flex-1 w-full min-w-0">
+          <div className="space-y-4 px-3 pb-4 w-full min-w-0">
             {/* 1. PINNED SECTION (Only shows if at least 1 pinned chat exists) */}
             {open && pinnedChats.length > 0 && (
               <div>
@@ -885,7 +969,7 @@ function ChatItemRow({
   return (
     <div
       className={cn(
-        "group relative flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors duration-150 cursor-pointer select-none",
+        "group relative flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition-colors duration-150 cursor-pointer select-none min-w-0 overflow-hidden",
         isActive
           ? "bg-card text-foreground font-medium border border-border shadow-xs"
           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -895,31 +979,35 @@ function ChatItemRow({
       title={chat.title}
     >
       {/* Icon: Pin / Star / Normal */}
-      {chat.pinned ? (
-        <Pin className="h-3.5 w-3.5 shrink-0 text-amber-500 fill-amber-500/40" />
-      ) : chat.favorite ? (
-        <Star className="h-3.5 w-3.5 shrink-0 text-amber-400 fill-amber-400" />
-      ) : (
-        <MessageSquarePlus
-          className={cn(
-            "h-3.5 w-3.5 shrink-0 transition-colors",
-            isActive ? "text-primary" : "opacity-60 group-hover:opacity-100",
-          )}
-        />
-      )}
+      <div className="shrink-0 flex items-center justify-center">
+        {chat.pinned ? (
+          <Pin className="h-3.5 w-3.5 text-amber-500 fill-amber-500/40" />
+        ) : chat.favorite ? (
+          <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+        ) : (
+          <MessageSquarePlus
+            className={cn(
+              "h-3.5 w-3.5 transition-colors",
+              isActive ? "text-primary" : "opacity-60 group-hover:opacity-100",
+            )}
+          />
+        )}
+      </div>
 
       {/* Title & Metadata (When expanded) */}
       {open && (
-        <div className="min-w-0 flex-1 pr-1">
-          <div className="flex items-center gap-1.5">
-            <span className="block truncate text-foreground font-medium">{chat.title}</span>
+        <div className="min-w-0 flex-1 overflow-hidden pr-0.5">
+          <div className="flex items-center gap-1 min-w-0">
+            <span className="block truncate text-foreground font-medium flex-1 min-w-0">
+              {chat.title}
+            </span>
             {chat.favorite && !chat.pinned && (
               <span className="shrink-0 text-[10px] text-amber-400">★</span>
             )}
           </div>
-          <div className="flex items-center gap-1.5 mt-0.5">
+          <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
             {chat.folder && (
-              <span className="inline-flex items-center rounded-xs bg-primary/10 px-1 py-0.2 text-[9px] font-medium text-primary truncate max-w-[90px]">
+              <span className="inline-flex shrink-0 items-center rounded-xs bg-primary/10 px-1 py-0.2 text-[9px] font-medium text-primary truncate max-w-[80px]">
                 {chat.folder}
               </span>
             )}
@@ -1093,9 +1181,9 @@ function SectionLabel({
 }) {
   if (!open) return <div className="my-2 h-px bg-sidebar-border" />;
   return (
-    <div className="flex items-center gap-1.5 px-2.5 pb-1.5 text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase">
-      <Icon className={cn("h-3 w-3", iconColor)} />
-      {label}
+    <div className="flex items-center gap-1.5 px-1 pb-1.5 text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase min-w-0">
+      <Icon className={cn("h-3 w-3 shrink-0", iconColor)} />
+      <span className="truncate">{label}</span>
     </div>
   );
 }

@@ -184,33 +184,60 @@ export function ChatMessage({
             </div>
           )}
 
-          {/* Action Row — Subtle icon buttons */}
-          <div className="mt-2.5 flex items-center gap-0.5 opacity-80 transition-opacity group-hover:opacity-100">
+          {/* Action Row — Subtle interactive action buttons */}
+          <div className="mt-3 flex flex-wrap items-center gap-1 opacity-90 transition-opacity group-hover:opacity-100">
             <ActionButton
               label={copied ? "Copied" : "Copy"}
               icon={copied ? Check : Copy}
               onClick={handleCopy}
               active={copied}
             />
+
+            {onSelectPrompt && (
+              <>
+                <ActionButton
+                  label="Practice"
+                  icon={BrainCircuit}
+                  onClick={() =>
+                    onSelectPrompt(
+                      "Generate 3 exam practice questions with answer keys based on this topic.",
+                    )
+                  }
+                />
+                <ActionButton
+                  label="Add to Revision"
+                  icon={Sparkles}
+                  onClick={() =>
+                    onSelectPrompt(
+                      "Extract the key formulas and core definitions from this into a concise revision card.",
+                    )
+                  }
+                />
+              </>
+            )}
+
             <ActionButton label="Regenerate" icon={RefreshCw} onClick={onRegenerate} />
-            <ActionButton
-              label="Accurate"
-              icon={ThumbsUp}
-              active={vote === "up"}
-              onClick={() => {
-                setVote("up");
-                toast.success("Feedback recorded — thank you!");
-              }}
-            />
-            <ActionButton
-              label="Inaccurate"
-              icon={ThumbsDown}
-              active={vote === "down"}
-              onClick={() => {
-                setVote("down");
-                toast("Feedback recorded — improving retrieval weights.");
-              }}
-            />
+
+            <div className="ml-auto flex items-center gap-0.5">
+              <ActionButton
+                label="Accurate"
+                icon={ThumbsUp}
+                active={vote === "up"}
+                onClick={() => {
+                  setVote("up");
+                  toast.success("Feedback recorded — thank you!");
+                }}
+              />
+              <ActionButton
+                label="Inaccurate"
+                icon={ThumbsDown}
+                active={vote === "down"}
+                onClick={() => {
+                  setVote("down");
+                  toast("Feedback recorded — improving retrieval weights.");
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
